@@ -1,0 +1,33 @@
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 2 regiones, 2 zonas.            
+Discretizacion espacial: [1465 2456]
+Espesores: [45. 66.]
+Distribucion de zonas: [1 2]            
+Propiedades materiales:
+Sigma_T: [ 56. 657.]
+Sigma_S: [34. 12.]
+Fuentes: [5. 7.]            
+Orden de cuadratura: S4 con 2 direcciones.            
+Pesos: [0.34785485 0.65214515]
+Direcciones: [0.86113631 0.33998104]
+.
+

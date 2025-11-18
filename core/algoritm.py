@@ -1,55 +1,96 @@
 import numpy as np
+from .cuadraturas import DATA
+import pandas as pd
+import logging
 
+logger= logging.getLogger(__name__)
 # =================================================================
 # Paso A: Datos de Entrada (Dados de entrada) [1, 2]
 # =================================================================
-class Runner:
-    def __init__(self, num_regions:int =0 , num_zones:int =0, ):
+class Config:
+    logging.basicConfig(filename='Config.log',level=logging.INFO)
+    def __init__(self, num_regions:int =0 , num_zones:int =0, epsilon:float =1e-5, max_iter:int =2000):
         self.num_regions = num_regions
         self.num_zones = num_zones
         if num_regions > 0 and num_zones > 0:
-            print("### Configurando el espacio de esas regiones:\n")
+            logger.info("\n### Configurando el espacio de esas regiones:\n")
             self.space_config()
         elif num_zones > num_regions:
             raise ValueError("Número de zonas no puede ser mayor que el número de regiones.")
             
         else:
-            print("Número de regiones o zonas no válido.")
-        
-        
+            logger.info("Número de regiones o zonas no válido.")
+        logger.info("\n### Configurando las propiedades de los materiales:")
+        self.materials_config()
+        logger.info("### Configurando el orden de la cuadratura:\n")
+        self.order_cuadrature()
+        logger.info("### Realizando cálculos preliminares:\n")
+        self.prelim_calculations()
+          
     def space_config(self):
-        self.NC = np.array([int(input(f"Introduzca la discretizacion espacial de la region: {i} -> ")) for i in range(self.num_regions)]) 
-        self.HR = np.array([float(input(f"Introduzca el espesor en [cm] de la region: {i} -> ")) for i in range(self.num_zones)]) # Espesor de cada región (cm) [1, 2]
+        self.NC = np.array([int(input(f"Introduzca la discretizacion espacial de la region: {i+1} -> ")) for i in range(self.num_regions)]) 
+        self.HR = np.array([float(input(f"Introduzca el espesor en [cm] de la region: {i+1} -> ")) for i in range(self.num_regions)]) # Espesor de cada región (cm) [1, 2]
+        self.IZL = np.array([int(input(f"Introduzca la ZONA de la region: {i+1} -> ")) for i in range(self.num_regions)])  # Mapeo de las zonas: 
+             
+    def materials_config(self):
+        self.SCT = np.array([float(input(f"Introduzca Sección de choque macroscópica total de la ZONA: {i+1} -> ")) for i in range(self.num_zones)]) # Sección de choque macroscópica total (Sigma_T) [1, 2]
+        self.SCS = np.array([float(input(f"Introduzca Sección de choque macroscópica de esparcimiento de la ZONA: {i+1} -> ")) for i in range(self.num_zones)]) # Sección de choque macroscópica de esparcimiento (Sigma_S) [1, 2]
+        self.Q = np.array([float(input(f"Introduzca la Fuente de la ZONA: {i+1} -> ")) for i in range(self.num_regions)]) 
         
-    def atoms_params(self):
+    def order_cuadrature(self):
+        self.N = int(input("Introduzca el orden de cuadratura -> "))
+        if self.N % 2 == 0:
+            print(f"Orden de cuadratura S{self.N} seleccionado.")
+        else: 
+            raise ValueError("El orden de la cuadratura debe ser un número par.")         
+        self.N_HALF = self.N // 2 # N/2 direcciones
+        self.wights_directions()
+    
+    def wights_directions(self):
+        dataframe= pd.DataFrame(DATA) 
+        self.miu_m = dataframe.loc[(dataframe['N'] == self.N), 'mu_m'].values
+        self.omega_m = dataframe.loc[(dataframe['N'] == self.N), 'omega_m'].values
+        
+    def prelim_calculations(self):
+        # Cálculos preliminares
+        self.NTC = np.sum(self.NC) # Total de celdas 
+        self.NTP = self.NTC + 1 # Total de puntos 
+        self.HC = np.array([hr/nc for hr, nc in zip(self.HR, self.NC)]) # Espesor de las celdas 
+        
+        
+        
+        
+    
+    def __str__(self) -> str:
+        return f"\nConfiguracion del programa: {self.num_regions} regiones, {self.num_zones} zonas.\
+            \nDiscretizacion espacial: {self.NC}\nEspesores: {self.HR}\nDistribucion de zonas: {self.IZL}\
+            \nPropiedades materiales:\nSigma_T: {self.SCT}\nSigma_S: {self.SCS}\nFuentes: {self.Q}\
+            \nOrden de cuadratura: S{self.N} con {self.N_HALF} direcciones.\
+            \nPesos: {self.omega_m}\nDirecciones: {self.miu_m}\n"
+
+
+
+
+
+
+
+# =================================================================
+# Paso B: Cálculos Preliminares (Calcule) [1, 2]
+# =================================================================
+class Runner():
+    def __init__(self, config:Config):
+        self.config = config
+        
+        self.S= np.zeros((config.NTC))  # Flujo angular inizializado en cero
+        self.FORTH= np.zeros((config.NTP,config.N_HALF))  # Flujo angular hacia adelante
+        self.BACK= np.zeros((config.NTP,config.N_HALF))  # Flujo angular hacia adelante
+        logger.info(f"Runner inicializado correctamente con los siguientes datos\n{config}.\n")
+        
+    def boundary_conditions(self):
         
         pass
     
     def __str__(self) -> str:
-        return f"Configuracion del programa: {self.num_regions} regiones, {self.num_zones} zonas.\
-            \nDiscretizacion espacial: {self.NC}\nEspesores: {self.HR}\n"
+        return f"Runner con configuración: {self.config}"
 
 
-
-NC = np.array([100,200]) # Número de celdas de discretización espacial por región [1, 2]
-HR = np.array([5,32]) # Espesor de cada región (cm) [1, 2]
-
-# Propiedades del material (Se asume una única zona por simplicidad)
-# Izquierda (Zona 1): sigma_t = 1.0, sigma_s = 0.99, Q = 2.0 (ejemplo genérico)
-SCT = np.array([1.0,2]) # Sección de choque macroscópica total (Sigma_T) [1, 2]
-SCS = np.array([0.99,0.98]) # Sección de choque macroscópica de esparcimiento (Sigma_S) [1, 2]
-Q = np.array([2.0, 3]) # Fuente con intensidad constante (por región) [1, 2]
-IZL = np.array([2,1]) # Mapeo de las zonas: Región 1 usa Zona 1 [1, 2]
-
-# Parámetros angulares (Cuadratura S_N). Usaremos S2 como ejemplo (N=2)
-N = 2        # Orden de la cuadratura angular S_N
-N_HALF = N // 2 # N/2 direcciones [1, 2]
-
-# Cuadratura Gauss-Legendre S2:
-# mu_m > 0 (HI en la fuente) y pesos W [1, 2, 9]
-HI = np.array([0.577350269189626]) # Ordenada discreta (mu_m) [1, 2, 9]
-W = np.array([1.0]) # Peso de la cuadratura angular S_N [1, 2, 9]
-
-# Criterio de convergencia [1, 2]
-EPSILON = 1e-5 # Número de convergencia [1, 2]
-MAX_ITER = 2000 # Límite de iteraciones
