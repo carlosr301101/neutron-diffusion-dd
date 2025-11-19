@@ -78,17 +78,51 @@ class Config:
 # Paso B: Cálculos Preliminares (Calcule) [1, 2]
 # =================================================================
 class Runner():
-    def __init__(self, config:Config):
+    def __init__(self, config:Config, reflexiva:bool=False):
         self.config = config
+        self.converged:bool=False
+        self.reflexiva=reflexiva
         
         self.S= np.zeros((config.NTC))  # Flujo angular inizializado en cero
         self.FORTH= np.zeros((config.NTP,config.N_HALF))  # Flujo angular hacia adelante
         self.BACK= np.zeros((config.NTP,config.N_HALF))  # Flujo angular hacia adelante
         logger.info(f"Runner inicializado correctamente con los siguientes datos\n{config}.\n")
-        
+        # logger.info(f"Matriz FORTH: {self.FORTH} , BACK: {self.BACK}")     
+        if not reflexiva:
+            self.boundary_conditions()
+        else:
+            self.boundary_reflexiva() 
     def boundary_conditions(self):
+        self.FORTH[0]= [float(input(f"Ingrese el valor en la frontera IZQ de la cuadratura {i+1}")) for i in range(self.config.N_HALF)]
+        self.BACK[0]= [float(input(f"Ingrese el valor en la frontera DER de la cuadratura {i+1}")) for i in range(self.config.N_HALF)]
+
+    def boundary_reflexiva(self):
+        self.FORTH[0]= np.ones(2)
+        self.BACK[0]= np.ones(2)
+    
+    def __call__(self):
+        
+        def barre_izq():
+            ### Iniciando barredura
+            jf=1
+            for jr in range(self.config.num_regions):
+                iz= self.config.IZL[jr]
+                xt= 0.5*self.config.SCT[iz]
+                xc= self.config.HC[jr]
+                f=self.config.Q[jr]
+                gr=self.config.NC[jr]
+                for j in range(gr):
+                    jt=jf
+                    jf=jf+1
+                    esp= self.config.omega_m[jf]
+                    
+            pass
+        def barre_derecha(self):
+            pass
         
         pass
+        
+
     
     def __str__(self) -> str:
         return f"Runner con configuración: {self.config}"

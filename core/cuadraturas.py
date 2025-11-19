@@ -22,6 +22,10 @@ DATA = {
         0.362683783378362  # N=8, m=4
     ]
 }
+
+INPUT= {
+    ''
+}
 # import pandas as pd
 # dataframe= pd.DataFrame(DATA) 
 # miu_m = dataframe.loc[(dataframe['N'] == 8), 'mu_m'].values
