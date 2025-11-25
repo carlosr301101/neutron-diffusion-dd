@@ -107,9 +107,9 @@ class Runner():
         ## Aun no se ha terminado para que sea reflexiva, hay que modificar esta condicion.
     
     def barre_der(self):
-            ### Iniciando barredura Izquierda
+            ### Iniciando barredura Derecha (Left to Right)
             start=time()
-            logger.info("Iniciado Barrido a la Izquierda, e iniciando contador t")
+            logger.info("Iniciado Barrido de Izquierda a Derecha, e iniciando contador t")
             jf=0
             for jr in range(self.config.num_regions):
                 iz= self.config.IZL[jr]
@@ -120,39 +120,37 @@ class Runner():
                 for j in range(gr):
                     jt=jf
                     jf=jf+1
-                    esp= self.config.omega_m[jf-1]
                     for i in range(self.config.N_HALF):
                         od= self.config.omega_m[i]/xc
                         auxt= self.FORTH[jt][i]
-                        num=(od-xt)*auxt+esp+f
+                        num=(od-xt)*auxt+f
                         den=od+xt
                         self.FORTH[jf][i]=num/den
             end=time()
-            logger.info(f"Finalizado Barrido a la Derecha, y  finalizado contador t: {end-start} [s]")
+            logger.info(f"Finalizado Barrido de Izquierda a Derecha, tiempo: {end-start} [s]")
                         
     def barre_izq(self):
-            ### Iniciando barredura Derecha
+            ### Iniciando barredura Izquierda (Right to Left)
             start=time()
-            logger.info("Iniciado Barrido a la Derecha, e iniciando contador t")
-            jf=self.config.NTP
+            logger.info("Iniciado Barrido de Derecha a Izquierda, e iniciando contador t")
+            jf=self.config.NTP-1
             for jr in range(self.config.num_regions-1,-1,-1):
                 iz= self.config.IZL[jr]
-                xt= 0.5*self.config.SCT[iz]
+                xt= 0.5*self.config.SCT[iz-1]
                 xc= self.config.HC[jr]
                 f=self.config.Q[jr]
                 gr=self.config.NC[jr]
                 for j in range(gr):
                     jt=jf
                     jf=jf-1
-                    esp= self.config.omega_m[jf]
                     for i in range(self.config.N_HALF):
                         od= self.config.omega_m[i]/xc
-                        auxt= self.FORTH[jt][i]
-                        num=(od-xt)*auxt+esp+f
+                        auxt= self.BACK[jt][i]
+                        num=(od-xt)*auxt+f
                         den=od+xt
                         self.BACK[jf][i]=num/den
             end=time()
-            logger.info(f"Finalizado Barrido a la Derecha, y finalizado contador t: {end-start} [s]")
+            logger.info(f"Finalizado Barrido de Derecha a Izquierda, tiempo: {end-start} [s]")
             
     def calculo_flujo(self):
             start=time()
@@ -180,11 +178,11 @@ class Runner():
             
             for jr in range(self.config.num_regions):
                 iz= self.config.IZL[jr]
-                xs= 0.5*self.config.SCS[iz]
+                xs= 0.5*self.config.SCS[iz-1]
                 gr=self.config.NC[jr]
                 for jc in range(gr):
-                    js=js+1
                     self.S[js]= xs*self.average_flux[js]
+                    js=js+1
 
             end=time()
             logger.info(f"Finalizado Actualización de fuente, y finalizado contador t: {end-start} [s]")

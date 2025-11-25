@@ -139,3 +139,111 @@ Direcciones: [0.57735027]
 
 INFO:core.algoritm:Iniciando Iteración número: 1
 INFO:core.algoritm:Iniciado Barrido a la Izquierda, e iniciando contador t
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 1 regiones, 1 zonas.            
+Discretizacion espacial: [100]
+Espesores: [100.]
+Distribucion de zonas: [1]            
+Propiedades materiales:
+Sigma_T: [1.]
+Sigma_S: [0.97]
+Fuentes: [1.]            
+Orden de cuadratura: S2 con 1 direcciones.            
+Pesos: [1.]
+Direcciones: [0.57735027]
+.
+
+INFO:core.algoritm:Iniciando Iteración número: 1
+INFO:core.algoritm:Iniciado Barrido de Izquierda a Derecha, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Izquierda a Derecha, tiempo: 0.00024890899658203125 [s]
+INFO:core.algoritm:Iniciado Barrido de Derecha a Izquierda, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Derecha a Izquierda, tiempo: 0.00018596649169921875 [s]
+INFO:core.algoritm:Iniciado Cálculo de flujo, e iniciando contador t
+INFO:core.algoritm:Finalizado Cálculo de flujo, y finalizado contador t: 0.0006489753723144531 [s]
+INFO:core.algoritm:Iniciado Actualización de fuente, e iniciando contador t
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 1 regiones, 1 zonas.            
+Discretizacion espacial: [100]
+Espesores: [100.]
+Distribucion de zonas: [1]            
+Propiedades materiales:
+Sigma_T: [1.]
+Sigma_S: [0.97]
+Fuentes: [1.]            
+Orden de cuadratura: S2 con 1 direcciones.            
+Pesos: [1.]
+Direcciones: [0.57735027]
+.
+
+INFO:core.algoritm:Iniciando Iteración número: 1
+INFO:core.algoritm:Iniciado Barrido de Izquierda a Derecha, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Izquierda a Derecha, tiempo: 0.0003161430358886719 [s]
+INFO:core.algoritm:Iniciado Barrido de Derecha a Izquierda, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Derecha a Izquierda, tiempo: 0.0002770423889160156 [s]
+INFO:core.algoritm:Iniciado Cálculo de flujo, e iniciando contador t
+INFO:core.algoritm:Finalizado Cálculo de flujo, y finalizado contador t: 0.0016968250274658203 [s]
+INFO:core.algoritm:Iniciado Actualización de fuente, e iniciando contador t
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 1 regiones, 1 zonas.            
+Discretizacion espacial: [100]
+Espesores: [100.]
+Distribucion de zonas: [1]            
+Propiedades materiales:
+Sigma_T: [1.]
+Sigma_S: [0.97]
+Fuentes: [1.]            
+Orden de cuadratura: S2 con 1 direcciones.            
+Pesos: [1.]
+Direcciones: [0.57735027]
+.
+
+INFO:core.algoritm:Iniciando Iteración número: 1
+INFO:core.algoritm:Iniciado Barrido de Izquierda a Derecha, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Izquierda a Derecha, tiempo: 0.0002987384796142578 [s]
+INFO:core.algoritm:Iniciado Barrido de Derecha a Izquierda, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Derecha a Izquierda, tiempo: 0.0002739429473876953 [s]
+INFO:core.algoritm:Iniciado Cálculo de flujo, e iniciando contador t
+INFO:core.algoritm:Finalizado Cálculo de flujo, y finalizado contador t: 0.0005707740783691406 [s]
+INFO:core.algoritm:Iniciado Actualización de fuente, e iniciando contador t
+INFO:core.algoritm:Finalizado Actualización de fuente, y finalizado contador t: 0.0001087188720703125 [s]
+INFO:core.algoritm:Cambio máximo relativo en el flujo: 0.9999999999500001
+INFO:core.algoritm:Iniciando Iteración número: 2
+INFO:core.algoritm:Iniciado Barrido de Izquierda a Derecha, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Izquierda a Derecha, tiempo: 0.0002617835998535156 [s]
+INFO:core.algoritm:Iniciado Barrido de Derecha a Izquierda, e iniciando contador t
+INFO:core.algoritm:Finalizado Barrido de Derecha a Izquierda, tiempo: 0.00026917457580566406 [s]
+INFO:core.algoritm:Iniciado Cálculo de flujo, e iniciando contador t
+INFO:core.algoritm:Finalizado Cálculo de flujo, y finalizado contador t: 0.0004990100860595703 [s]
+INFO:core.algoritm:Iniciado Actualización de fuente, e iniciando contador t
+INFO:core.algoritm:Finalizado Actualización de fuente, y finalizado contador t: 0.00010228157043457031 [s]
+INFO:core.algoritm:Cambio máximo relativo en el flujo: 0.0
