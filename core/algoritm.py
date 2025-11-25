@@ -98,8 +98,8 @@ class Runner():
         else:
             self.boundary_reflexiva() 
     def boundary_conditions(self):
-        self.FORTH[0]= [float(input(f"Ingrese el valor en la frontera IZQ de la cuadratura {i+1}")) for i in range(self.config.N_HALF)]
-        self.BACK[0]= [float(input(f"Ingrese el valor en la frontera DER de la cuadratura {i+1}")) for i in range(self.config.N_HALF)]
+        self.FORTH[0]= [float(input(f"Ingrese el valor en la frontera IZQ de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)]
+        self.BACK[0]= [float(input(f"Ingrese el valor en la frontera DER de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)]
 
     def boundary_reflexiva(self):
         self.FORTH[0]= np.ones(2)
@@ -113,14 +113,14 @@ class Runner():
             jf=0
             for jr in range(self.config.num_regions):
                 iz= self.config.IZL[jr]
-                xt= 0.5*self.config.SCT[iz]
+                xt= 0.5*self.config.SCT[iz-1]
                 xc= self.config.HC[jr]
                 f=self.config.Q[jr]
                 gr=self.config.NC[jr]
                 for j in range(gr):
                     jt=jf
                     jf=jf+1
-                    esp= self.config.omega_m[jf]
+                    esp= self.config.omega_m[jf-1]
                     for i in range(self.config.N_HALF):
                         od= self.config.omega_m[i]/xc
                         auxt= self.FORTH[jt][i]

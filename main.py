@@ -7,3 +7,4 @@ NZ = 1  # Número de zonas de materiales [1, 2]
 # Instanciar la clase Runner
 config = alg.Config(NR, NZ)
 runner1= alg.Runner(config)
+print("Valores obtenidos del flujo promedio:", runner1())

@@ -61,3 +61,81 @@ Pesos: [0.34785485 0.65214515]
 Direcciones: [0.86113631 0.33998104]
 .
 
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 1 regiones, 1 zonas.            
+Discretizacion espacial: [100]
+Espesores: [100.]
+Distribucion de zonas: [1]            
+Propiedades materiales:
+Sigma_T: [1.]
+Sigma_S: [0.97]
+Fuentes: [1.]            
+Orden de cuadratura: S2 con 1 direcciones.            
+Pesos: [1.]
+Direcciones: [0.57735027]
+.
+
+INFO:core.algoritm:Iniciando Iteración número: 1
+INFO:core.algoritm:Iniciado Barrido a la Izquierda, e iniciando contador t
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 1 regiones, 1 zonas.            
+Discretizacion espacial: [100]
+Espesores: [100.]
+Distribucion de zonas: [1]            
+Propiedades materiales:
+Sigma_T: [1.]
+Sigma_S: [0.97]
+Fuentes: [1.]            
+Orden de cuadratura: S2 con 1 direcciones.            
+Pesos: [1.]
+Direcciones: [0.57735027]
+.
+
+INFO:core.algoritm:Iniciando Iteración número: 1
+INFO:core.algoritm:Iniciado Barrido a la Izquierda, e iniciando contador t
+INFO:core.algoritm:
+### Configurando el espacio de esas regiones:
+
+INFO:core.algoritm:
+### Configurando las propiedades de los materiales:
+INFO:core.algoritm:### Configurando el orden de la cuadratura:
+
+INFO:core.algoritm:### Realizando cálculos preliminares:
+
+INFO:core.algoritm:Runner inicializado correctamente con los siguientes datos
+
+Configuracion del programa: 1 regiones, 1 zonas.            
+Discretizacion espacial: [100]
+Espesores: [100.]
+Distribucion de zonas: [1]            
+Propiedades materiales:
+Sigma_T: [1.]
+Sigma_S: [0.97]
+Fuentes: [1.]            
+Orden de cuadratura: S2 con 1 direcciones.            
+Pesos: [1.]
+Direcciones: [0.57735027]
+.
+
+INFO:core.algoritm:Iniciando Iteración número: 1
+INFO:core.algoritm:Iniciado Barrido a la Izquierda, e iniciando contador t
