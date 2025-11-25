@@ -173,7 +173,7 @@ class Runner():
             end=time()
             logger.info(f"Finalizado Cálculo de flujo, y finalizado contador t: {end-start} [s]")
 
-    def actuializa_fuente(self):
+    def actualiza_fuente(self):
             start=time()
             js=0
             logger.info("Iniciado Actualización de fuente, e iniciando contador t")
@@ -212,7 +212,7 @@ class Runner():
             self.barre_der()
             self.barre_izq()
             self.calculo_flujo()
-            self.actuializa_fuente()
+            self.actualiza_fuente()
             self.converged= self.check_convergence(old_flux, self.average_flux)
             if self.check_max_iterations():
                 break
