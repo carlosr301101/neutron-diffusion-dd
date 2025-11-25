@@ -1,234 +1,299 @@
 import numpy as np
-from .cuadraturas import DATA
 import pandas as pd
 import logging
 from time import time
 
-logger= logging.getLogger(__name__)
+# --- MOCK DATA PARA QUE EL CÓDIGO CORRA SIN EL ARCHIVO EXTERNO ---
+# Si tienes el archivo .cuadraturas, puedes borrar este bloque y descomentar el import
+# DATA = {
+#     'N': [2, 2, 4, 4, 8, 8, 8, 8],
+#     'mu_m': [0.57735, 0.57735, 0.33998, 0.86113, 0.18343, 0.52553, 0.79666, 0.96028],
+#     'omega_m': [1.0, 1.0, 0.65214, 0.34785, 0.36268, 0.31370, 0.22238, 0.10122]
+# }
+from .cuadraturas import DATA 
+
+logger = logging.getLogger(__name__)
+
 # =================================================================
-# Paso A: Datos de Entrada (Dados de entrada) [1, 2]
+# Paso A: Configuración
 # =================================================================
 class Config:
-    def __init__(self, num_regions:int =0 , num_zones:int =0, epsilon:float =1e-5, max_iter:int =2000):
-        logging.basicConfig(filename=f'Config-{id(self)}.log',level=logging.INFO)
+    def __init__(self, num_regions:int=0, num_zones:int=0, epsilon:float=1e-5, max_iter:int=2000):
+        # Limpiamos handlers previos para evitar duplicidad en logs
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+        logging.basicConfig(filename='Simulacion.log', level=logging.INFO, filemode='w')
+        
         self.num_regions = num_regions
         self.num_zones = num_zones
         self.epsilon = epsilon
         self.max_iter = max_iter
-        if num_regions > 0 and num_zones > 0:
-            logger.info("\n### Configurando el espacio de esas regiones:\n")
-            self.space_config()
-        elif num_zones > num_regions:
-            raise ValueError("Número de zonas no puede ser mayor que el número de regiones.")
-            
-        else:
-            logger.info("Número de regiones o zonas no válido.")
-        logger.info("\n### Configurando las propiedades de los materiales:")
-        self.materials_config()
-        logger.info("### Configurando el orden de la cuadratura:\n")
-        self.order_cuadrature()
-        logger.info("### Realizando cálculos preliminares:\n")
+        self.manual_input()
         self.prelim_calculations()
-        logger.info(f"\n### Configuracion completa:\n{self}")
+
+    def manual_input(self):
+        """Método separado para inputs para no bloquear la inicialización"""
+        print("\n--- CONFIGURACIÓN ESPACIAL ---")
+        self.NC = np.array([int(input(f"Celdas en Región {i+1}: ")) for i in range(self.num_regions)]) 
+        self.HR = np.array([float(input(f"Espesor total [cm] Región {i+1}: ")) for i in range(self.num_regions)])
+        self.IZL = np.array([int(input(f"ID Zona Material Región {i+1} (1-based): ")) for i in range(self.num_regions)])
         
-          
-    def space_config(self):
-        self.NC = np.array([int(input(f"Introduzca la discretizacion espacial de la region: {i+1} -> ")) for i in range(self.num_regions)]) 
-        self.HR = np.array([float(input(f"Introduzca el espesor en [cm] de la region: {i+1} -> ")) for i in range(self.num_regions)]) # Espesor de cada región (cm) [1, 2]
-        self.IZL = np.array([int(input(f"Introduzca la ZONA de la region: {i+1} -> ")) for i in range(self.num_regions)])  # Mapeo de las zonas: 
-             
-    def materials_config(self):
-        self.SCT = np.array([float(input(f"Introduzca Sección de choque macroscópica total de la ZONA: {i+1} -> ")) for i in range(self.num_zones)]) # Sección de choque macroscópica total (Sigma_T) [1, 2]
-        self.SCS = np.array([float(input(f"Introduzca Sección de choque macroscópica de esparcimiento de la ZONA: {i+1} -> ")) for i in range(self.num_zones)]) # Sección de choque macroscópica de esparcimiento (Sigma_S) [1, 2]
-        self.Q = np.array([float(input(f"Introduzca la Fuente de la ZONA: {i+1} -> ")) for i in range(self.num_regions)]) 
+        print("\n--- CONFIGURACIÓN MATERIALES ---")
+        self.SCT = np.array([float(input(f"Sigma_Total Zona {i+1}: ")) for i in range(self.num_zones)])
+        self.SCS = np.array([float(input(f"Sigma_Scattering Zona {i+1}: ")) for i in range(self.num_zones)])
+        self.Q = np.array([float(input(f"Fuente Externa (Q) Región {i+1}: ")) for i in range(self.num_regions)]) 
         
-    def order_cuadrature(self):
-        self.N = int(input("Introduzca el orden de cuadratura -> "))
-        if self.N % 2 == 0:
-            print(f"Orden de cuadratura S{self.N} seleccionado.")
-        else: 
-            raise ValueError("El orden de la cuadratura debe ser un número par.")         
-        self.N_HALF = self.N // 2 # N/2 direcciones
-        self.wights_directions()
-    
-    def wights_directions(self):
-        dataframe= pd.DataFrame(DATA) 
-        self.miu_m = dataframe.loc[(dataframe['N'] == self.N), 'mu_m'].values
-        self.omega_m = dataframe.loc[(dataframe['N'] == self.N), 'omega_m'].values
+        print("\n--- CONFIGURACIÓN CUADRATURA ---")
+        self.N = int(input("Orden de cuadratura (ej. 2, 4, 8) -> "))
+        if self.N % 2 != 0: 
+            raise ValueError("Debe ser par.")
+        self.N_HALF = self.N // 2
+        self.weights_directions()
         
+        self.prelim_calculations()
+        logger.info(f"Configuración completa.\n{self}")
+
+    def weights_directions(self):
+        df = pd.DataFrame(DATA) 
+        # Filtramos por N. Asumimos que DATA tiene simetría y solo tomamos valores positivos o únicos
+        subset = df[df['N'] == self.N]
+        if subset.empty:
+            # Fallback simple si no hay datos
+            print(f"Advertencia: No hay datos para S{self.N}, usando S2.")
+            self.miu_m = np.array([0.57735])
+            self.omega_m = np.array([1.0])
+            self.N_HALF = 1
+        else:
+            # Tomamos solo la mitad positiva si el archivo tiene todas, o todo si tiene solo la mitad
+            # Ajusta esto según el formato real de tu archivo cuadraturas.py
+            n_rows = len(subset)
+            if n_rows == self.N:
+                self.miu_m = subset['mu_m'].values[self.N_HALF:] # Asumiendo ordenado negativo a positivo
+                self.omega_m = subset['omega_m'].values[self.N_HALF:]
+            else:
+                self.miu_m = subset['mu_m'].values
+                self.omega_m = subset['omega_m'].values
+
     def prelim_calculations(self):
-        # Cálculos preliminares
-        self.NTC = np.sum(self.NC) # Total de celdas 
-        self.NTP = self.NTC + 1 # Total de puntos 
-        self.HC = np.array([hr/nc for hr, nc in zip(self.HR, self.NC)]) # Espesor de las celdas 
+        self.NTC = np.sum(self.NC) # Total celdas
+        self.NTP = self.NTC + 1    # Total nodos (bordes)
         
+        # --- VECTORIZACIÓN DE PROPIEDADES ---
+        # Expandimos las propiedades de regiones a celdas individuales
+        # Esto elimina la necesidad de bucles anidados complejos en el Runner
+        self.sigma_t_vec = np.zeros(self.NTC)
+        self.sigma_s_vec = np.zeros(self.NTC)
+        self.q_ext_vec = np.zeros(self.NTC)
+        self.dx_vec = np.zeros(self.NTC)
         
-        
-        
-    
-    def __str__(self) -> str:
-        return f"\nConfiguracion del programa: {self.num_regions} regiones, {self.num_zones} zonas.\
-            \nDiscretizacion espacial: {self.NC}\nEspesores: {self.HR}\nDistribucion de zonas: {self.IZL}\
-            \nPropiedades materiales:\nSigma_T: {self.SCT}\nSigma_S: {self.SCS}\nFuentes: {self.Q}\
-            \nOrden de cuadratura: S{self.N} con {self.N_HALF} direcciones.\
-            \nPesos: {self.omega_m}\nDirecciones: {self.miu_m}\n"
+        idx = 0
+        for r in range(self.num_regions):
+            n_cells = self.NC[r]
+            zone_idx = self.IZL[r] - 1 # Ajuste a base-0
+            dx = self.HR[r] / n_cells
+            
+            self.sigma_t_vec[idx : idx+n_cells] = self.SCT[zone_idx]
+            self.sigma_s_vec[idx : idx+n_cells] = self.SCS[zone_idx]
+            self.q_ext_vec[idx : idx+n_cells] = self.Q[r]
+            self.dx_vec[idx : idx+n_cells] = dx
+            
+            idx += n_cells
 
-
-
-
+    def __str__(self):
+        return f"Celdas Totales: {self.NTC}, Orden: S{self.N}"
 
 
 # =================================================================
-# Paso B: Cálculos Preliminares (Calcule) [1, 2]
+# Paso B: Runner (Motor de Cálculo)
 # =================================================================
 class Runner():
     def __init__(self, config:Config, reflexiva:bool=False):
         self.config = config
-        self.converged:bool=False
-        self.reflexiva=reflexiva
-        self.iteration:int=0
+        self.converged = False
+        self.reflexiva = reflexiva
+        self.iteration = 0
         
-        self.S= np.zeros((config.NTC))  # Flujo angular inizializado en cero
-        self.FORTH= np.zeros((config.NTP,config.N_HALF))  # Flujo angular hacia adelante
-        self.BACK= np.zeros((config.NTP,config.N_HALF))  # Flujo angular hacia adelante
-        self.average_flux= np.zeros((config.NTC))  # Flujo promedio en cada celda
-        logger.info(f"Runner inicializado correctamente con los siguientes datos\n{config}.\n")
-        # logger.info(f"Matriz FORTH: {self.FORTH} , BACK: {self.BACK}")     
+        # Flujos Angulares [Nodos x Direcciones]
+        # PSI_RIGHT: neutrones viajando hacia x+ (mu > 0)
+        # PSI_LEFT:  neutrones viajando hacia x- (mu < 0)
+        self.PSI_RIGHT = np.zeros((config.NTP, config.N_HALF))
+        self.PSI_LEFT  = np.zeros((config.NTP, config.N_HALF))
+        
+        # Flujo Escalar [Celdas]
+        self.scalar_flux = np.zeros(config.NTC)
+        
+        # Fuente Total [Celdas] (Scattering + Externa)
+        self.total_source = np.zeros(config.NTC)
+
         if not reflexiva:
             self.boundary_conditions()
         else:
-            self.boundary_reflexiva() 
+            # Inicializamos en 1 solo para evitar ceros, se ajustará en el loop
+            self.PSI_RIGHT[0, :] = 1.0 
+            self.PSI_LEFT[-1, :] = 1.0
+
     def boundary_conditions(self):
-        # Condición entrante por la izquierda para direcciones "forth"
-        self.FORTH[0] = np.array([float(input(f"Ingrese el valor en la frontera IZQ de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)])
-        # Condición entrante por la derecha para direcciones "back" (índice NTP-1)
-        self.BACK[self.config.NTP-1] = np.array([float(input(f"Ingrese el valor en la frontera DER de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)])
+        print("\n--- CONDICIONES DE FRONTERA ---")
+        # Frontera Izquierda (x=0) incidiendo hacia la derecha
+        print("Ingrese flujo incidente en IZQUIERDA (mu > 0):")
+        vals_izq = [float(input(f"  Dirección {i+1}: ")) for i in range(self.config.N_HALF)]
+        self.PSI_RIGHT[0, :] = vals_izq
+        
+        # Frontera Derecha (x=L) incidiendo hacia la izquierda
+        print("Ingrese flujo incidente en DERECHA (mu < 0):")
+        vals_der = [float(input(f"  Dirección {i+1}: ")) for i in range(self.config.N_HALF)]
+        self.PSI_LEFT[-1, :] = vals_der
 
-    def boundary_reflexiva(self):
-        # Valores reflexivos: entradas en ambos extremos (izq para FORTH, der para BACK)
-        self.FORTH[0] = np.ones(self.config.N_HALF)
-        self.BACK[self.config.NTP-1] = np.ones(self.config.N_HALF)
-        ## Aun no se ha terminado para que sea reflexiva, hay que modificar esta condicion.
-    
-    def barre_der(self):
-            ### Iniciando barredura Derecha (Left to Right)
-            start=time()
-            logger.info("Iniciado Barrido de Izquierda a Derecha, e iniciando contador t")
-            jf=0
-            for jr in range(self.config.num_regions):
-                iz= self.config.IZL[jr]
-                xt= 0.5*self.config.SCT[iz-1]
-                xc= self.config.HC[jr]
-                f=self.config.Q[jr]
-                gr=self.config.NC[jr]
-                for j in range(gr):
-                    jt=jf
-                    jf=jf+1
-                    for i in range(self.config.N_HALF):
-                        od= self.config.omega_m[i]/xc
-                        auxt= self.FORTH[jt][i]
-                        num=(od-xt)*auxt+f
-                        den=od+xt
-                        self.FORTH[jf][i]=num/den
-            end=time()
-            logger.info(f"Finalizado Barrido de Izquierda a Derecha, tiempo: {end-start} [s]")
-                        
-    def barre_izq(self):
-            ### Iniciando barredura Izquierda (Right to Left)
-            start=time()
-            logger.info("Iniciado Barrido de Derecha a Izquierda, e iniciando contador t")
-            jf=self.config.NTP-1
-            for jr in range(self.config.num_regions-1,-1,-1):
-                iz= self.config.IZL[jr]
-                xt= 0.5*self.config.SCT[iz-1]
-                xc= self.config.HC[jr]
-                f=self.config.Q[jr]
-                gr=self.config.NC[jr]
-                for j in range(gr):
-                    jt=jf
-                    jf=jf-1
-                    for i in range(self.config.N_HALF):
-                        od= self.config.omega_m[i]/xc
-                        auxt= self.BACK[jt][i]
-                        num=(od-xt)*auxt+f
-                        den=od+xt
-                        self.BACK[jf][i]=num/den
-            end=time()
-            logger.info(f"Finalizado Barrido de Derecha a Izquierda, tiempo: {end-start} [s]")
+    def update_reflective_boundaries(self):
+        """Espejo: Lo que sale por un lado entra por el mismo lado en dirección opuesta"""
+        # Izquierda (x=0): Lo que venía de la izquierda (PSI_LEFT) rebota hacia la derecha
+        self.PSI_RIGHT[0, :] = self.PSI_LEFT[0, :]
+        # Derecha (x=L): Lo que venía de la derecha (PSI_RIGHT) rebota hacia la izquierda
+        self.PSI_LEFT[-1, :] = self.PSI_RIGHT[-1, :]
+
+    def sweep(self):
+        """Realiza el barrido de transporte usando Diamond Difference + Step Difference Fixup"""
+        start = time()
+        
+        # Pre-calculamos fuente total isotrópica: Q_total = 0.5 * (Q_ext + Sigma_S * Phi)
+        # El 0.5 asume simetría/normalización planar standard.
+        self.total_source = 0.5 * (self.config.q_ext_vec + self.config.sigma_s_vec * self.scalar_flux)
+        
+        # --- BARRIDO HACIA LA DERECHA (mu > 0) ---
+        for k in range(self.config.NTC):
+            dx = self.config.dx_vec[k]
+            st = self.config.sigma_t_vec[k]
+            source = self.total_source[k]
             
+            for m in range(self.config.N_HALF):
+                mu = self.config.miu_m[m]
+                psi_in = self.PSI_RIGHT[k, m] # Nodo k (entrada)
+                
+                # Ecuación Diamond Difference
+                # psi_out = [ (mu/dx - st/2)*psi_in + S ] / (mu/dx + st/2)
+                alpha = mu / dx
+                num = (alpha - 0.5*st) * psi_in + source
+                den = (alpha + 0.5*st)
+                
+                psi_out = num / den
+                
+                # FIXUP: Step Difference (Si DD da negativo)
+                if psi_out < 0:
+                    # SD asume flujo constante en la celda
+                    psi_out = (source + alpha * psi_in) / (alpha + st)
+                
+                self.PSI_RIGHT[k+1, m] = psi_out # Nodo k+1 (salida)
+
+        # --- BARRIDO HACIA LA IZQUIERDA (mu < 0) ---
+        # Iteramos k desde NTC-1 hasta 0
+        for k in range(self.config.NTC - 1, -1, -1):
+            dx = self.config.dx_vec[k]
+            st = self.config.sigma_t_vec[k]
+            source = self.total_source[k]
+            
+            for m in range(self.config.N_HALF):
+                mu = abs(self.config.miu_m[m]) # Usamos valor positivo para la formula simétrica
+                psi_in = self.PSI_LEFT[k+1, m] # Nodo k+1 (entrada desde la derecha)
+                
+                alpha = mu / dx
+                num = (alpha - 0.5*st) * psi_in + source
+                den = (alpha + 0.5*st)
+                
+                psi_out = num / den
+                
+                # FIXUP
+                if psi_out < 0:
+                    psi_out = (source + alpha * psi_in) / (alpha + st)
+                
+                self.PSI_LEFT[k, m] = psi_out # Nodo k (salida hacia la izquierda)
+                
+        # logger.info(f"Sweep time: {time()-start:.5f}s")
+
     def calculo_flujo(self):
-            start=time()
-            logger.info("Iniciado Cálculo de flujo, e iniciando contador t")
-            for j in range(self.config.NTC):
-                jf=j+1
-                suma=0.0
+        """Calcula el flujo escalar integrando los flujos angulares"""
+        old_flux = self.scalar_flux.copy()
+        
+        # Reiniciar flujo escalar
+        self.scalar_flux[:] = 0.0
+        
+        for k in range(self.config.NTC):
+            suma = 0.0
+            for m in range(self.config.N_HALF):
+                w = self.config.omega_m[m]
                 
-                for id in range(self.config.N_HALF):
-                    aux1= 0.5*(self.FORTH[jf][id]+ self.FORTH[j][id])
-                    aux2= 0.5*(self.BACK[jf][id]+ self.BACK[j][id])
-                    peso= self.config.omega_m[id]
-                    suma= suma + peso*(aux1 + aux2)
-                    self.S[j]= self.S[j]+ self.config.omega_m[id]*(self.FORTH[j][id]+ self.BACK[j+1][id])
+                # Promedio en el centro de la celda (Diamond Difference Average)
+                # psi_avg = 0.5 * (psi_in + psi_out)
+                psi_avg_der = 0.5 * (self.PSI_RIGHT[k, m] + self.PSI_RIGHT[k+1, m])
+                psi_avg_izq = 0.5 * (self.PSI_LEFT[k, m] + self.PSI_LEFT[k+1, m])
                 
-                self.average_flux[j]= suma
-                
-            end=time()
-            logger.info(f"Finalizado Cálculo de flujo, y finalizado contador t: {end-start} [s]")
-
-    def actualiza_fuente(self):
-            start=time()
-            js=0
-            logger.info("Iniciado Actualización de fuente, e iniciando contador t")
+                # Sumamos ambas direcciones (asumiendo simetría de pesos x2 o sumando explícitamente)
+                # Si w es para todo el ángulo sólido, w_izq = w_der
+                suma += w * (psi_avg_der + psi_avg_izq)
             
-            for jr in range(self.config.num_regions):
-                iz= self.config.IZL[jr]
-                xs= 0.5*self.config.SCS[iz-1]
-                gr=self.config.NC[jr]
-                for jc in range(gr):
-                    self.S[js]= xs*self.average_flux[js]
-                    js=js+1
+            self.scalar_flux[k] = suma
+            
+        return old_flux
 
-            end=time()
-            logger.info(f"Finalizado Actualización de fuente, y finalizado contador t: {end-start} [s]")
-
-    def check_convergence(self,old_flux, new_flux):
-            relative_change = np.abs((new_flux - old_flux) / (new_flux + 1e-10))  # Evitar división por cero
-            max_change = np.max(relative_change)
-            logger.info(f"Cambio máximo relativo en el flujo: {max_change}")
-            return max_change <= self.config.epsilon
+    def check_convergence(self, old_flux):
+        # Manejo seguro de división por cero
+        denom = np.where(self.scalar_flux > 1e-13, self.scalar_flux, 1.0)
+        diff = np.abs(self.scalar_flux - old_flux)
+        rel_error = np.max(diff / denom)
         
-    def check_max_iterations(self):
-            if self.iteration >= self.config.max_iter:
-                print("Se ha alcanzado el número máximo de iteraciones sin convergencia.")
-                logger.warning("Se ha alcanzado el número máximo de iteraciones sin convergencia.")
-                return True
-            return False
-# =================================================================
-# Paso C: Cálculos segun la metodologia a seguir
-# =================================================================
+        print(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
+        logger.info(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
+        
+        return rel_error < self.config.epsilon
+
     def __call__(self):
-        while not self.converged:
-            old_flux= self.average_flux.copy()
+        logger.info("Iniciando Iteración de Fuente...")
+        print("\n--- INICIANDO CÁLCULO ---")
+        
+        while self.iteration < self.config.max_iter:
             self.iteration += 1
-            logger.info(f"Iniciando Iteración número: {self.iteration}")
-            self.barre_der()
-            self.barre_izq()
-            self.calculo_flujo()
-            self.actualiza_fuente()
-            self.converged= self.check_convergence(old_flux, self.average_flux)
-            if self.check_max_iterations():
+            
+            # 1. Actualizar fronteras si es reflexiva
+            if self.reflexiva:
+                self.update_reflective_boundaries()
+            
+            # 2. Barrido (Transport Sweep)
+            self.sweep()
+            
+            # 3. Calcular flujo escalar y obtener el anterior
+            old_flux = self.calculo_flujo()
+            
+            # 4. Chequear convergencia
+            if self.check_convergence(old_flux):
+                print(f"\nCONVERGENCIA ALCANZADA en iteración {self.iteration}.")
+                self.converged = True
                 break
-        
-        return self.average_flux
-    
-        
+                
+        if not self.converged:
+            print("\nADVERTENCIA: Máximo de iteraciones alcanzado sin convergencia.")
+            
+        return self.scalar_flux
 
-
+# =================================================================
+# BLOQUE MAIN PARA EJECUCIÓN
+# =================================================================
+if __name__ == "__main__":
+    # Ejemplo de uso
+    try:
+        conf = Config(num_regions=1, num_zones=1)
+        # Usamos inputs manuales como en tu código original
+        conf.manual_input()
         
+        # Preguntar si es reflexiva
+        ref = input("¿Condiciones reflexivas? (s/n): ").lower() == 's'
         
+        runner = Runner(conf, reflexiva=ref)
+        flux_result = runner()
         
-    
-    def __str__(self) -> str:
-        return f"Runner con configuración: {self.config}"
-
-
+        print("\n--- RESULTADO FINAL (FLUJO ESCALAR) ---")
+        print(flux_result)
+        
+    except ValueError as e:
+        print(f"Error de entrada: {e}")
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+        logger.error(e, exc_info=True)
