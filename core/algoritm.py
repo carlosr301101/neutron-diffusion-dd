@@ -103,7 +103,7 @@ class Runner():
     
     def __call__(self):
         
-        def barre_izq():
+        def barre_der():
             ### Iniciando barredura Izquierda
             start=time()
             logger.info("Iniciado Barrido a la Izquierda, e iniciando contador t")
@@ -127,7 +127,7 @@ class Runner():
             end=time()
             logger.info(f"Finalizado Barrido a la Derecha, y  finalizado contador t: {end-start} [s]")
                         
-        def barre_derecha(self):
+        def barre_izq(self):
             ### Iniciando barredura Derecha
             start=time()
             logger.info("Iniciado Barrido a la Derecha, e iniciando contador t")
