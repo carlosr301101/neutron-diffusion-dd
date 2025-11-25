@@ -9,8 +9,8 @@ logger= logging.getLogger(__name__)
 # Paso A: Datos de Entrada (Dados de entrada) [1, 2]
 # =================================================================
 class Config:
-    logging.basicConfig(filename='Config.log',level=logging.INFO)
     def __init__(self, num_regions:int =0 , num_zones:int =0, epsilon:float =1e-5, max_iter:int =2000):
+        logging.basicConfig(filename=f'Config-{id(self)}.log',level=logging.INFO)
         self.num_regions = num_regions
         self.num_zones = num_zones
         self.epsilon = epsilon
@@ -29,6 +29,8 @@ class Config:
         self.order_cuadrature()
         logger.info("### Realizando cálculos preliminares:\n")
         self.prelim_calculations()
+        logger.info(f"\n### Configuracion completa:\n{self}")
+        
           
     def space_config(self):
         self.NC = np.array([int(input(f"Introduzca la discretizacion espacial de la region: {i+1} -> ")) for i in range(self.num_regions)]) 
@@ -76,7 +78,6 @@ class Config:
 
 
 
-
 # =================================================================
 # Paso B: Cálculos Preliminares (Calcule) [1, 2]
 # =================================================================
@@ -98,12 +99,15 @@ class Runner():
         else:
             self.boundary_reflexiva() 
     def boundary_conditions(self):
-        self.FORTH[0]= [float(input(f"Ingrese el valor en la frontera IZQ de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)]
-        self.BACK[0]= [float(input(f"Ingrese el valor en la frontera DER de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)]
+        # Condición entrante por la izquierda para direcciones "forth"
+        self.FORTH[0] = np.array([float(input(f"Ingrese el valor en la frontera IZQ de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)])
+        # Condición entrante por la derecha para direcciones "back" (índice NTP-1)
+        self.BACK[self.config.NTP-1] = np.array([float(input(f"Ingrese el valor en la frontera DER de la cuadratura {i+1}: ")) for i in range(self.config.N_HALF)])
 
     def boundary_reflexiva(self):
-        self.FORTH[0]= np.ones(2)
-        self.BACK[0]= np.ones(2)
+        # Valores reflexivos: entradas en ambos extremos (izq para FORTH, der para BACK)
+        self.FORTH[0] = np.ones(self.config.N_HALF)
+        self.BACK[self.config.NTP-1] = np.ones(self.config.N_HALF)
         ## Aun no se ha terminado para que sea reflexiva, hay que modificar esta condicion.
     
     def barre_der(self):
