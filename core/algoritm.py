@@ -2,6 +2,7 @@ import numpy as np
 from .cuadraturas import DATA
 import pandas as pd
 import logging
+from time import time
 
 logger= logging.getLogger(__name__)
 # =================================================================
@@ -103,8 +104,10 @@ class Runner():
     def __call__(self):
         
         def barre_izq():
-            ### Iniciando barredura
-            jf=1
+            ### Iniciando barredura Izquierda
+            start=time()
+            logger.info("Iniciado Barrido a la Izquierda, e iniciando contador t")
+            jf=0
             for jr in range(self.config.num_regions):
                 iz= self.config.IZL[jr]
                 xt= 0.5*self.config.SCT[iz]
@@ -115,12 +118,39 @@ class Runner():
                     jt=jf
                     jf=jf+1
                     esp= self.config.omega_m[jf]
-                    
-            pass
+                    for i in range(self.config.N_HALF):
+                        od= self.config.omega_m[i]/xc
+                        auxt= self.FORTH[jt][i]
+                        num=(od-xt)*auxt+esp+f
+                        den=od+xt
+                        self.FORTH[jf][i]=num/den
+            end=time()
+            logger.info(f"Finalizado Barrido a la Derecha, y  finalizado contador t: {end-start} [s]")
+                        
         def barre_derecha(self):
-            pass
-        
-        pass
+            ### Iniciando barredura Derecha
+            start=time()
+            logger.info("Iniciado Barrido a la Derecha, e iniciando contador t")
+            jf=0
+            for jr in range(self.config.num_regions):
+                iz= self.config.IZL[jr]
+                xt= 0.5*self.config.SCT[iz]
+                xc= self.config.HC[jr]
+                f=self.config.Q[jr]
+                gr=self.config.NC[jr]
+                for j in range(gr):
+                    jt=jf
+                    jf=jf+1
+                    esp= self.config.omega_m[jf]
+                    for i in range(self.config.N_HALF):
+                        od= self.config.omega_m[i]/xc
+                        auxt= self.FORTH[jt][i]
+                        num=(od-xt)*auxt+esp+f
+                        den=od+xt
+                        self.FORTH[jf][i]=num/den
+            end=time()
+            logger.info(f"Finalizado Barrido a la Derecha, y finalizado contador t: {end-start} [s]")
+    
         
 
     
