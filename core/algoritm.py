@@ -91,9 +91,13 @@ class Config:
             self.dx_vec[idx : idx+n_cells] = dx
             
             idx += n_cells
-
-    def __str__(self):
-        return f"Celdas Totales: {self.NTC}, Orden: S{self.N}"
+            
+    def __str__(self) -> str:
+        return f"\nConfiguracion del programa: {self.num_regions} regiones, {self.num_zones} zonas.\
+            \nDiscretizacion espacial: {self.NC}\nEspesores: {self.HR}\nDistribucion de zonas: {self.IZL}\
+            \nPropiedades materiales:\nSigma_T: {self.SCT}\nSigma_S: {self.SCS}\nFuentes: {self.Q}\
+            \nOrden de cuadratura: S{self.N} con {self.N_HALF} direcciones.\
+            \nPesos: {self.omega_m}\nDirecciones: {self.miu_m}\n"
 
 
 # =================================================================
