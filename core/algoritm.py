@@ -3,6 +3,7 @@ import pandas as pd
 import logging
 from time import time
 
+
 from .cuadraturas import DATA 
 
 logger = logging.getLogger(__name__)
@@ -21,16 +22,19 @@ class Config:
         
         
         if manual:
-            print("----- Aun no esta implementado para automatizar las entradas -----")
-            #self.manual_input()
+            if self.num_regions==0:
+                self.regiones_input()
+        
+            if self.num_zones==0:
+                self.zones_input()
+            
+            self.manual_input()
         else:
+            print("----- Aun no esta implementado para automatizar las entradas -----")
+            raise NotImplementedError
             self.auto_input(kwargs)
             
-        if self.num_regions==0:
-            self.regiones_input()
-        
-        if self.num_zones==0:
-            self.zones_input()
+       
             
         self.epsilon = epsilon
         self.max_iter = max_iter
@@ -313,7 +317,7 @@ class Runner():
         if not self.converged:
             print("\nADVERTENCIA: Máximo de iteraciones alcanzado sin convergencia.")
             
-        return self.scalar_flux
+        return (self.scalar_flux, self.iteration)
 
 # =================================================================
 # BLOQUE MAIN PARA EJECUCIÓN
