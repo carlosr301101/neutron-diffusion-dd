@@ -11,18 +11,63 @@ logger = logging.getLogger(__name__)
 # Paso A: Configuración
 # =================================================================
 class Config:
-    def __init__(self, num_regions:int=0, num_zones:int=0, epsilon:float=1e-5, max_iter:int=2000):
+    def __init__(self, num_regions:int=0, num_zones:int=0, epsilon:float=1e-5, max_iter:int=2000, manual:bool=True ,**kwargs):
         # Limpiamos handlers previos para evitar duplicidad en logs
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
         logging.basicConfig(filename='Config.log', level=logging.INFO, filemode='w')
-        
         self.num_regions = num_regions
         self.num_zones = num_zones
+        
+        
+        if manual:
+            print("----- Aun no esta implementado para automatizar las entradas -----")
+            #self.manual_input()
+        else:
+            self.auto_input(kwargs)
+            
+        if self.num_regions==0:
+            self.regiones_input()
+        
+        if self.num_zones==0:
+            self.zones_input()
+            
         self.epsilon = epsilon
         self.max_iter = max_iter
-        self.manual_input()
+        
         self.prelim_calculations()
+    
+    def regiones_input(self):
+        self.num_regions=int(input("\n Necesita introducir el numero de Regiones: "))
+    
+    def zones_input(self):
+        self.num_zones=int(input("\n Necesita introducir el numero de Zonas: "))
+        
+    def auto_input(self, kwargs:dict):
+        """Esta funcion aun esta en desarrollo"""
+        print("\n--- CONFIGURACIÓN ESPACIAL ---")
+        self.num_regions = kwargs.get("NR",1)
+        self.num_zones = kwargs.get("NZ",1)
+        self.NC = kwargs.get("NC",0)
+        print(self.NC)
+        # self.HR = np.array([float(input(f"Espesor total [cm] Región {i+1}: ")) for i in range(self.num_regions)])
+        # self.IZL = np.array([int(input(f"ID Zona Material Región {i+1} (1-based): ")) for i in range(self.num_regions)])
+        
+        # print("\n--- CONFIGURACIÓN MATERIALES ---")
+        # self.SCT = np.array([float(input(f"Sigma_Total Zona {i+1}: ")) for i in range(self.num_zones)])
+        # self.SCS = np.array([float(input(f"Sigma_Scattering Zona {i+1}: ")) for i in range(self.num_zones)])
+        # self.Q = np.array([float(input(f"Fuente (Q) Región {i+1}: ")) for i in range(self.num_regions)]) 
+        
+        # print("\n--- CONFIGURACIÓN CUADRATURA ---")
+        # self.N = int(input("Orden de cuadratura (ej. 2, 4, 8) -> "))
+        # if self.N % 2 != 0: 
+        #     raise ValueError("Debe ser par.")
+        # self.N_HALF = self.N // 2
+        # self.weights_directions()
+        
+        # self.prelim_calculations()
+        # logger.info(f"Configuración completa.\n{self}")
+        # pass
 
     def manual_input(self):
         """Método separado para inputs para no bloquear la inicialización"""
