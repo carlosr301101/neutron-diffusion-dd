@@ -3,50 +3,77 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import exp
 import pandas as pd
-# Parámetros del dominio y malla
-NR = 1  # Número de regiones [1, 2]
-NZ = 1  # Número de zonas de materiales [1, 2]
 
-# Instanciar la clase Runner
 def func_analitica(x):
-    return 1.705*exp(-0.3*x)
+    """Solución analítica de referencia"""
+    return 1.705 * exp(-0.3 * x)
+
+def calcular_desvios_relativos(valores_numericos, valores_analiticos):
+    """Calcula desvíos relativos evitando división por cero"""
+    desvios = np.abs((valores_numericos - valores_analiticos) / (np.abs(valores_analiticos) + 1e-10)) * 100
+    return desvios
 
 def run():
     config = alg.Config(manual=True)
-    runner1= alg.Runner(config)
-    valores_flujo, n_iter= runner1()
-
-    malla= len(valores_flujo)
-    h=100//malla
-
-
-
-    x_line= np.linspace(0, len(valores_flujo),malla)
-    y= np.array([func_analitica(i) for i in x_line])
-
-    points = np.column_stack((x_line, valores_flujo))
-
-
-    ## Parte de graficar los valores como puntos los numericos y la funcion analitica
-    # plt.scatter(points[:, 0], points[:, 1], color='blue', label='Valores numericos')
-    # plt.plot(x_line, y, color="green" ,label='Valores analiticos')
-    # plt.title("Flujo promedio a lo largo del dominio")
-    # plt.xlabel(f"Índice de celda, malla x:[{malla}]")
-    # plt.ylabel("Flujo promedio")
-
-    # plt.grid()
-    # plt.legend()
-    # plt.savefig("salva.png")
+    runner1 = alg.Runner(config)
+    valores_flujo, n_iter = runner1()
     
+    malla = len(valores_flujo)
+    h = 100 // malla
     
-    # Con esto aseguramos que se analicen los puntos x1, x2, x3 para -> 10, 20, 50
-    x1=10//h
-    x2=20//h
-    x3=50//h
-    data= pd.read_csv("EX1_data.csv")
-    data.loc[len(data)]= [n_iter,malla ,valores_flujo[x1-1], valores_flujo[x2-1], valores_flujo[x3-1], runner1.converged]
+    # Calcular coordenadas de las celdas (centros)
+    x_celdas = np.arange(malla) * h + h/2
+    valores_analiticos = np.array([func_analitica(x) for x in x_celdas])
     
-    data.to_csv("EX1_data_modificado.csv", index=False)
+    # Calcular desvíos relativos
+    desvios_relativos = calcular_desvios_relativos(valores_flujo, valores_analiticos)
+    
+    # Crear figura con 2 subgráficas (lado a lado)
+    fig, axes = plt.subplots(1, 2, figsize=(16, 5))
+    
+    # Gráfica 1: Comparación de valores numéricos vs analíticos
+    axes[0].plot(x_celdas, valores_analiticos, color='green', linewidth=2, label='Solución analítica')
+    axes[0].scatter(x_celdas, valores_flujo, color='blue', s=20, alpha=0.6, label='Solución numérica (Diamond Difference)')
+    axes[0].set_xlabel('Posición x (cm)')
+    axes[0].set_ylabel('Flujo escalar')
+    axes[0].set_title(f'Comparación: Solución Numérica vs Analítica (Malla: {malla} celdas, Iteraciones: {n_iter})')
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend()
+    
+    # Gráfica 2: Desvío relativo
+    axes[1].semilogy(x_celdas, desvios_relativos, color='red', marker='o', markersize=4, linewidth=1.5)
+    axes[1].set_xlabel('Posición x (cm)')
+    axes[1].set_ylabel('Desvío relativo (%)')
+    axes[1].set_title('Desvío Relativo del Flujo Escalar')
+    axes[1].grid(True, alpha=0.3, which='both')
+    
+    plt.tight_layout()
+    plt.savefig("comparacion_flujos.png", dpi=150)
+    print("✓ Gráfica guardada como: comparacion_flujos.png")
+    plt.show()
+    
+    # Mostrar estadísticas
+    print(f"\n{'='*60}")
+    print("ESTADÍSTICAS DE CONVERGENCIA")
+    print(f"{'='*60}")
+    print(f"Número de iteraciones: {n_iter}")
+    print(f"Número de celdas: {malla}")
+    print(f"Espesor de celda: {h} cm")
+    print(f"Desvío relativo máximo: {np.max(desvios_relativos):.6f}%")
+    print(f"Desvío relativo medio: {np.mean(desvios_relativos):.6f}%")
+    print(f"Desvío relativo mínimo: {np.min(desvios_relativos):.6f}%")
+    print(f"{'='*60}\n")
+    
+    # Guardar resultados en CSV
+    resultados = pd.DataFrame({
+        'x_celda': x_celdas,
+        'flujo_numerico': valores_flujo,
+        'flujo_analitico': valores_analiticos,
+        'desvio_relativo_%': desvios_relativos
+    })
+    resultados.to_excel("resultados_comparacion.xlsx", index=False)
+    print("✓ Resultados guarto_dados como: resultados_comparacion.csv")
 
-run()
+if __name__ == "__main__":
+    run()
 
