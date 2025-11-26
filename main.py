@@ -16,7 +16,7 @@ def calcular_desvios_relativos(valores_numericos, valores_analiticos):
 config_dict = {
     'num_regions': 3,
     'num_zones': 3,
-    'NC': [20,60,2],                    
+    'NC': [10,30,10],                  
     'HR': [10,30,10],                  
     'IZL': [1,2,3],                     
     'SCT': [1.0,0.6,1],                   
@@ -35,7 +35,7 @@ config_dict_fino = {
     'SCT': [1.0,0.6,1],                   
     'SCS': [0.99,0.4,0.9],                  
     'Q': [2,0,0],                     
-    'N': 2                          
+    'N': 2                        
 }
 
 def run():
@@ -50,6 +50,7 @@ def run():
     
     valores_flujo, n_iter,right_flux,left_flux = runner1() # Aqui ocurren los calculos
     x_fino= np.arange(0,sum(config_fino.HR),0.5)
+    
     print(right_flux,left_flux)
     print(len(right_flux),len(left_flux))
     malla = len(valores_flujo)
@@ -60,7 +61,8 @@ def run():
     valores_analiticos = np.array([func_analitica(x) for x in x_celdas])
     
     # Calcular desvíos relativos
-    desvios_relativos = calcular_desvios_relativos(valores_flujo, valores_analiticos)
+    step=2 # Cambiar el step para graficar la misma cantidad de datos de ambas mallas
+    desvios_relativos = calcular_desvios_relativos(valores_flujo, valores_flujo_fino[::step])
     
     # Crear figura con 2 subgráficas (lado a lado)
     fig, axes = plt.subplots(1, 2, figsize=(16, 5))
@@ -75,20 +77,23 @@ def run():
     axes[0].legend()
     
     # Gráfica 2: Desvío relativo
-    # axes[1].semilogy(x_celdas, desvios_relativos, color='red', marker='o', markersize=4, linewidth=1.5)
-    # axes[1].set_xlabel('Posición x (cm)')
-    # axes[1].set_ylabel('Desvío relativo (%) logarítmico')
-    # axes[1].set_title('Desvío Relativo del Flujo Escalar')
-    # axes[1].grid(True, alpha=0.3, which='both')
-    print(len(x_celdas),len(valores_flujo_fino))
-    axes[1].scatter(x_celdas, valores_flujo, color='blue', s=20, alpha=0.6, label='Solución numérica')
-    axes[1].scatter(x_fino, valores_flujo_fino, color='red', s=20, alpha=0.6, label='Solución numérica FINA')
-    
+    axes[1].semilogy(x_celdas, desvios_relativos, color='red', marker='o', markersize=4, linewidth=1.5)
     axes[1].set_xlabel('Posición x (cm)')
-    axes[1].set_ylabel('Flujo escalar [n/m^2-s]')
-    axes[1].set_title(f'Comparación: Flujos Escalares (Malla: {malla} celdas, Iteraciones: {n_iter})')
-    axes[1].grid(True, alpha=0.3)
-    axes[1].legend()
+    axes[1].set_ylabel('Desvío relativo (%) logarítmico')
+    axes[1].set_title('Desvío Relativo del Flujo Escalar')
+    axes[1].grid(True, alpha=0.3, which='both')
+    print(len(x_celdas),len(valores_flujo_fino))
+  
+    #Comparar los flujos
+    
+    # axes[1].scatter(x_celdas, valores_flujo, color='blue', s=20, alpha=0.6, label='Solución numérica')
+    # axes[1].scatter(x_fino, valores_flujo_fino, color='red', s=20, alpha=0.6, label='Solución numérica FINA')
+    
+    # axes[1].set_xlabel('Posición x (cm)')
+    # axes[1].set_ylabel('Flujo escalar [n/m^2-s]')
+    # axes[1].set_title(f'Comparación: Flujos Escalares (Malla: {malla} celdas, Iteraciones: {n_iter})')
+    # axes[1].grid(True, alpha=0.3)
+    # axes[1].legend()
     
     plt.tight_layout()
     plt.savefig("comparacion_flujos.png", dpi=150)
@@ -96,16 +101,16 @@ def run():
     plt.show()
     
     # Mostrar estadísticas
-    # print(f"\n{'='*60}")
-    # print("ESTADÍSTICAS DE CONVERGENCIA")
-    # print(f"{'='*60}")
-    # print(f"Número de iteraciones: {n_iter}")
-    # print(f"Número de celdas: {malla}")
-    # print(f"Espesor de celda: {sum(config.HR)/malla} cm")
-    # print(f"Desvío relativo máximo: {np.max(desvios_relativos):.6f}%")
-    # print(f"Desvío relativo medio: {np.mean(desvios_relativos):.6f}%")
-    # print(f"Desvío relativo mínimo: {np.min(desvios_relativos):.6f}%")
-    # print(f"{'='*60}\n")
+    print(f"\n{'='*60}")
+    print("ESTADÍSTICAS DE CONVERGENCIA")
+    print(f"{'='*60}")
+    print(f"Número de iteraciones: {n_iter}")
+    print(f"Número de celdas: {malla}")
+    print(f"Espesor de celda: {sum(config.HR)/malla} cm")
+    print(f"Desvío relativo máximo: {np.max(desvios_relativos):.6f}%")
+    print(f"Desvío relativo medio: {np.mean(desvios_relativos):.6f}%")
+    print(f"Desvío relativo mínimo: {np.min(desvios_relativos):.6f}%")
+    print(f"{'='*60}\n")
     
     # Guardar resultados en CSV
     resultados = pd.DataFrame({
