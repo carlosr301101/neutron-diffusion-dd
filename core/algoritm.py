@@ -30,8 +30,6 @@ class Config:
             
             self.manual_input()
         else:
-            print("----- Aun no esta implementado para automatizar las entradas -----")
-            raise NotImplementedError
             self.auto_input(kwargs)
             
        
@@ -48,30 +46,81 @@ class Config:
         self.num_zones=int(input("\n Necesita introducir el numero de Zonas: "))
         
     def auto_input(self, kwargs:dict):
-        """Esta funcion aun esta en desarrollo"""
-        print("\n--- CONFIGURACIÓN ESPACIAL ---")
-        self.num_regions = kwargs.get("NR",1)
-        self.num_zones = kwargs.get("NZ",1)
-        self.NC = kwargs.get("NC",0)
-        print(self.NC)
-        # self.HR = np.array([float(input(f"Espesor total [cm] Región {i+1}: ")) for i in range(self.num_regions)])
-        # self.IZL = np.array([int(input(f"ID Zona Material Región {i+1} (1-based): ")) for i in range(self.num_regions)])
+        """Carga todos los datos desde un diccionario.
         
-        # print("\n--- CONFIGURACIÓN MATERIALES ---")
-        # self.SCT = np.array([float(input(f"Sigma_Total Zona {i+1}: ")) for i in range(self.num_zones)])
-        # self.SCS = np.array([float(input(f"Sigma_Scattering Zona {i+1}: ")) for i in range(self.num_zones)])
-        # self.Q = np.array([float(input(f"Fuente (Q) Región {i+1}: ")) for i in range(self.num_regions)]) 
+        Estructura esperada del diccionario:
+        {
+            'num_regions': int,
+            'num_zones': int,
+            'NC': list o np.array (celdas por región),
+            'HR': list o np.array (espesores en cm),
+            'IZL': list o np.array (zona de cada región),
+            'SCT': list o np.array (sigma total por zona),
+            'SCS': list o np.array (sigma scattering por zona),
+            'Q': list o np.array (fuente por región),
+            'N': int (orden cuadratura)
+        }
+        """
+        print("\n--- CARGANDO CONFIGURACIÓN DESDE DICCIONARIO ---")
         
-        # print("\n--- CONFIGURACIÓN CUADRATURA ---")
-        # self.N = int(input("Orden de cuadratura (ej. 2, 4, 8) -> "))
-        # if self.N % 2 != 0: 
-        #     raise ValueError("Debe ser par.")
-        # self.N_HALF = self.N // 2
-        # self.weights_directions()
+        # Campos de datos obligatorios (num_regions y num_zones ya están en self)
+        campos_datos = ['NC', 'HR', 'IZL', 'SCT', 'SCS', 'Q', 'N']
         
-        # self.prelim_calculations()
-        # logger.info(f"Configuración completa.\n{self}")
-        # pass
+        # Validar que estén presentes
+        for campo in campos_datos:
+            if campo not in kwargs:
+                raise ValueError(f"Campo obligatorio ausente: '{campo}'")
+        
+        # Actualizar num_regions y num_zones si vienen en kwargs
+        if 'num_regions' in kwargs:
+            self.num_regions = int(kwargs['num_regions'])
+        if 'num_zones' in kwargs:
+            self.num_zones = int(kwargs['num_zones'])
+        
+        # Validación básica
+        if self.num_zones > self.num_regions:
+            raise ValueError("Número de zonas no puede ser mayor que el número de regiones.")
+        
+        # Convertir a numpy arrays
+        self.NC = np.array(kwargs['NC'], dtype=int)
+        self.HR = np.array(kwargs['HR'], dtype=float)
+        self.IZL = np.array(kwargs['IZL'], dtype=int)
+        self.SCT = np.array(kwargs['SCT'], dtype=float)
+        self.SCS = np.array(kwargs['SCS'], dtype=float)
+        self.Q = np.array(kwargs['Q'], dtype=float)
+        
+        # Configurar cuadratura
+        self.N = int(kwargs['N'])
+        if self.N % 2 != 0:
+            raise ValueError("El orden de la cuadratura debe ser un número par.")
+        self.N_HALF = self.N // 2
+        
+        # Cargar direcciones y pesos
+        self.weights_directions()
+        
+        # Validaciones de dimensiones
+        if len(self.NC) != self.num_regions:
+            raise ValueError(f"NC debe tener {self.num_regions} elementos")
+        if len(self.HR) != self.num_regions:
+            raise ValueError(f"HR debe tener {self.num_regions} elementos")
+        if len(self.IZL) != self.num_regions:
+            raise ValueError(f"IZL debe tener {self.num_regions} elementos")
+        if len(self.SCT) != self.num_zones:
+            raise ValueError(f"SCT debe tener {self.num_zones} elementos")
+        if len(self.SCS) != self.num_zones:
+            raise ValueError(f"SCS debe tener {self.num_zones} elementos")
+        if len(self.Q) != self.num_regions:
+            raise ValueError(f"Q debe tener {self.num_regions} elementos")
+        
+        # Validar que IZL hace referencia a zonas válidas (1-based)
+        if np.any(self.IZL < 1) or np.any(self.IZL > self.num_zones):
+            raise ValueError(f"IZL debe contener valores entre 1 y {self.num_zones}")
+        
+        # Cálculos preliminares
+        self.prelim_calculations()
+        
+        print("✓ Configuración cargada exitosamente desde diccionario")
+        logger.info(f"Configuración cargada desde diccionario.\n{self}")
 
     def manual_input(self):
         """Método separado para inputs para no bloquear la inicialización"""
