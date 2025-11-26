@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 # Paso A: Configuración
 # =================================================================
 class Config:
-    def __init__(self, num_regions:int=0, num_zones:int=0, epsilon:float=1e-5, max_iter:int=2000, manual:bool=True ,**kwargs):
+    def __init__(self, num_regions:int=0, num_zones:int=0, epsilon:float=1e-5, max_iter:int=2000, manual:bool=True ,reflexiva:bool=False,**kwargs):
         # Limpiamos handlers previos para evitar duplicidad en logs
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
         logging.basicConfig(filename='Config.log', level=logging.INFO, filemode='w')
         self.num_regions = num_regions
         self.num_zones = num_zones
-        
+        self.reflexiva = reflexiva
         
         if manual:
             if self.num_regions==0:
@@ -153,10 +153,10 @@ class Config:
 # Paso B: Runner (Motor de Cálculo)
 # =================================================================
 class Runner():
-    def __init__(self, config:Config, reflexiva:bool=False):
+    def __init__(self, config:Config):
         self.config = config
         self.converged = False
-        self.reflexiva = reflexiva
+        self.reflexiva = config.reflexiva
         self.iteration = 0
         
         # Flujos Angulares [Nodos x Direcciones]
@@ -171,7 +171,7 @@ class Runner():
         # Fuente Total [Celdas] (Scattering + Externa)
         self.total_source = np.zeros(config.NTC)
 
-        if not reflexiva:
+        if not self.reflexiva:
             self.boundary_conditions()
         else:
             # Inicializamos en 1 solo para evitar ceros, se ajustará en el loop
@@ -195,7 +195,7 @@ class Runner():
         # Izquierda (x=0): Lo que venía de la izquierda (PSI_LEFT) rebota hacia la derecha
         self.PSI_RIGHT[0, :] = self.PSI_LEFT[0, :]
         # Derecha (x=L): Lo que venía de la derecha (PSI_RIGHT) rebota hacia la izquierda
-        self.PSI_LEFT[-1, :] = self.PSI_RIGHT[-1, :]
+        # self.PSI_LEFT[-1, :] = self.PSI_RIGHT[-1, :]
 
     def sweep(self):
         """Realiza el barrido de transporte usando Diamond Difference + Step Difference Fixup"""
@@ -317,7 +317,7 @@ class Runner():
         if not self.converged:
             print("\nADVERTENCIA: Máximo de iteraciones alcanzado sin convergencia.")
             
-        return (self.scalar_flux, self.iteration)
+        return (self.scalar_flux, self.iteration, self.PSI_RIGHT, self.PSI_LEFT)
 
 # =================================================================
 # BLOQUE MAIN PARA EJECUCIÓN
@@ -332,7 +332,7 @@ if __name__ == "__main__":
         # Preguntar si es reflexiva
         ref = input("¿Condiciones reflexivas? (s/n): ").lower() == 's'
         
-        runner = Runner(conf, reflexiva=ref)
+        runner = Runner(conf)
         flux_result = runner()
         
         print("\n--- RESULTADO FINAL (FLUJO ESCALAR) ---")

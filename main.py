@@ -14,12 +14,15 @@ def calcular_desvios_relativos(valores_numericos, valores_analiticos):
     return desvios
 
 def run():
-    config = alg.Config(manual=True)
+    config = alg.Config(manual=True,reflexiva=False)
     runner1 = alg.Runner(config)
-    valores_flujo, n_iter = runner1()
     
+    valores_flujo, n_iter,right_flux,left_flux = runner1() # Aqui ocurren los calculos
+    
+    print(right_flux,left_flux)
+    print(len(right_flux),len(left_flux))
     malla = len(valores_flujo)
-    h = 100 // malla
+    h = config.NTC // malla
     
     # Calcular coordenadas de las celdas (centros)
     x_celdas = np.arange(malla) * h + h/2
@@ -33,9 +36,9 @@ def run():
     
     # Gráfica 1: Comparación de valores numéricos vs analíticos
     axes[0].plot(x_celdas, valores_analiticos, color='green', linewidth=2, label='Solución analítica')
-    axes[0].scatter(x_celdas, valores_flujo, color='blue', s=20, alpha=0.6, label='Solución numérica (Diamond Difference)')
+    axes[0].scatter(x_celdas, valores_flujo, color='blue', s=20, alpha=0.6, label='Solución numérica')
     axes[0].set_xlabel('Posición x (cm)')
-    axes[0].set_ylabel('Flujo escalar')
+    axes[0].set_ylabel('Flujo escalar [n/m^2-s]')
     axes[0].set_title(f'Comparación: Solución Numérica vs Analítica (Malla: {malla} celdas, Iteraciones: {n_iter})')
     axes[0].grid(True, alpha=0.3)
     axes[0].legend()
@@ -43,9 +46,18 @@ def run():
     # Gráfica 2: Desvío relativo
     axes[1].semilogy(x_celdas, desvios_relativos, color='red', marker='o', markersize=4, linewidth=1.5)
     axes[1].set_xlabel('Posición x (cm)')
-    axes[1].set_ylabel('Desvío relativo (%)')
+    axes[1].set_ylabel('Desvío relativo (%) logarítmico')
     axes[1].set_title('Desvío Relativo del Flujo Escalar')
     axes[1].grid(True, alpha=0.3, which='both')
+    
+    # axes[1].plot(x_celdas, valores_analiticos, color='green', linewidth=2, label='Solución analítica')
+    # axes[1].scatter(x_celdas[0:100], right_flux[0:100], color='blue', s=20, alpha=0.6, label='Flujo Derecho')
+    # axes[1].scatter(x_celdas, left_flux[0:100], color='red', s=20, alpha=0.6, label='Flujo Izquierdo')
+    # axes[1].set_xlabel('Posición x (cm)')
+    # axes[1].set_ylabel('Flujo angular [n/m^2-s]')
+    # axes[1].set_title(f'Comparación: Flujos angulares (Malla: {malla} celdas, Iteraciones: {n_iter})')
+    # axes[1].grid(True, alpha=0.3)
+    # axes[1].legend()
     
     plt.tight_layout()
     plt.savefig("comparacion_flujos.png", dpi=150)
@@ -73,7 +85,15 @@ def run():
     })
     resultados.to_excel("resultados_comparacion.xlsx", index=False)
     print("✓ Resultados guarto_dados como: resultados_comparacion.csv")
-
+    
+    x1=10//h
+    x2=20//h
+    x3=50//h
+    data= pd.read_csv("EX1_data.csv")
+    data.loc[len(data)]= [n_iter,malla ,valores_flujo[x1-1], valores_flujo[x2-1], valores_flujo[x3-1], runner1.converged]
+    data.to_csv("EX1_data_modificado.csv", index=False)
+    
 if __name__ == "__main__":
     run()
-
+    # data= pd.read_csv("EX1_data.csv")
+    # data.to_excel("EX1_data.xlsx", index=False)
