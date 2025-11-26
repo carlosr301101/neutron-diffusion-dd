@@ -3,13 +3,6 @@ import pandas as pd
 import logging
 from time import time
 
-# --- MOCK DATA PARA QUE EL CÓDIGO CORRA SIN EL ARCHIVO EXTERNO ---
-# Si tienes el archivo .cuadraturas, puedes borrar este bloque y descomentar el import
-# DATA = {
-#     'N': [2, 2, 4, 4, 8, 8, 8, 8],
-#     'mu_m': [0.57735, 0.57735, 0.33998, 0.86113, 0.18343, 0.52553, 0.79666, 0.96028],
-#     'omega_m': [1.0, 1.0, 0.65214, 0.34785, 0.36268, 0.31370, 0.22238, 0.10122]
-# }
 from .cuadraturas import DATA 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +15,7 @@ class Config:
         # Limpiamos handlers previos para evitar duplicidad en logs
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
-        logging.basicConfig(filename='Simulacion.log', level=logging.INFO, filemode='w')
+        logging.basicConfig(filename='Config.log', level=logging.INFO, filemode='w')
         
         self.num_regions = num_regions
         self.num_zones = num_zones
@@ -41,7 +34,7 @@ class Config:
         print("\n--- CONFIGURACIÓN MATERIALES ---")
         self.SCT = np.array([float(input(f"Sigma_Total Zona {i+1}: ")) for i in range(self.num_zones)])
         self.SCS = np.array([float(input(f"Sigma_Scattering Zona {i+1}: ")) for i in range(self.num_zones)])
-        self.Q = np.array([float(input(f"Fuente Externa (Q) Región {i+1}: ")) for i in range(self.num_regions)]) 
+        self.Q = np.array([float(input(f"Fuente (Q) Región {i+1}: ")) for i in range(self.num_regions)]) 
         
         print("\n--- CONFIGURACIÓN CUADRATURA ---")
         self.N = int(input("Orden de cuadratura (ej. 2, 4, 8) -> "))
@@ -207,7 +200,7 @@ class Runner():
                 
                 self.PSI_LEFT[k, m] = psi_out # Nodo k (salida hacia la izquierda)
                 
-        # logger.info(f"Sweep time: {time()-start:.5f}s")
+        logger.info(f"Sweep time: {time()-start:.5f}s")
 
     def calculo_flujo(self):
         """Calcula el flujo escalar integrando los flujos angulares"""

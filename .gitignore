@@ -8,3 +8,5 @@ wheels/
 doc
 # Virtual environments
 .venv
+*.png
+*.log
