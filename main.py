@@ -22,7 +22,7 @@ config_dict = {
     'SCT': [1.0,0.6,1],                   
     'SCS': [0.99,0.4,0.9],                  
     'Q': [2,0,0],                     
-    'N': 2                          
+    'N': 4                       
 }
 
 
@@ -35,7 +35,7 @@ config_dict_fino = {
     'SCT': [1.0,0.6,1],                   
     'SCS': [0.99,0.4,0.9],                  
     'Q': [2,0,0],                     
-    'N': 2                        
+    'N': 4                    
 }
 
 def run():
@@ -58,7 +58,8 @@ def run():
     print(malla,config.NTC)
     # Calcular coordenadas de las celdas (centros)
     x_celdas = np.arange(malla) * h + h/2
-    valores_analiticos = np.array([func_analitica(x) for x in x_celdas])
+    # valores_analiticos = np.array([func_analitica(x) for x in x_celdas]) # Flujo analitico para EX1
+    
     
     # Calcular desvíos relativos
     step=2 # Cambiar el step para graficar la misma cantidad de datos de ambas mallas
@@ -116,7 +117,7 @@ def run():
     resultados = pd.DataFrame({
         'x_celda': x_celdas,
         'flujo_numerico': valores_flujo,
-        'flujo_analitico': valores_analiticos,
+        'flujo_numerico_fino': valores_flujo_fino[::step],
         'desvio_relativo_%': desvios_relativos
     })
     resultados.to_excel("resultados_comparacion.xlsx", index=False)
