@@ -16,26 +16,26 @@ def calcular_desvios_relativos(valores_numericos, valores_analiticos):
 config_dict = {
     'num_regions': 3,
     'num_zones': 3,
-    'NC': [20,60,20],                    # 100 celdas en región 1
-    'HR': [10,30,10],                  # Espesor de 100 cm
-    'IZL': [1,2,3],                     # Región 1 usa zona 1
-    'SCT': [1.0,0.6,1],                   # Sigma total = 1.0
-    'SCS': [0.99,0.4,0.9],                  # Sigma scattering = 0.97
-    'Q': [2,0,0],                     # Fuente = 1.0
-    'N': 2                          # Orden S2
+    'NC': [20,60,2],                    
+    'HR': [10,30,10],                  
+    'IZL': [1,2,3],                     
+    'SCT': [1.0,0.6,1],                   
+    'SCS': [0.99,0.4,0.9],                  
+    'Q': [2,0,0],                     
+    'N': 2                          
 }
 
 
 config_dict_fino = {
     'num_regions': 3,
     'num_zones': 3,
-    'NC': [20,60,20],                    # 100 celdas en región 1
-    'HR': [10,30,10],                  # Espesor de 100 cm
-    'IZL': [1,2,3],                     # Región 1 usa zona 1
-    'SCT': [1.0,0.6,1],                   # Sigma total = 1.0
-    'SCS': [0.99,0.4,0.9],                  # Sigma scattering = 0.97
-    'Q': [2,0,0],                     # Fuente = 1.0
-    'N': 2                          # Orden S2
+    'NC': [20,60,20],                    
+    'HR': [10,30,10],                  
+    'IZL': [1,2,3],                     
+    'SCT': [1.0,0.6,1],                   
+    'SCS': [0.99,0.4,0.9],                  
+    'Q': [2,0,0],                     
+    'N': 2                          
 }
 
 def run():
