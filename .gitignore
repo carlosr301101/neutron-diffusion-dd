@@ -12,3 +12,5 @@ doc
 *.log
 *.xlsx
 *.csv
+*.extras
+*.docx

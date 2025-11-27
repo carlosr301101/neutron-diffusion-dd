@@ -100,7 +100,7 @@ def code_to_plot():
     
     
 def run():
-    config = alg.Config(manual=True,reflexiva=False)
+    config = alg.Config()
     runner = alg.Runner(config)
     resultado = runner() # Retorna diccionario
     valores_flujo = resultado['scalar_flux']

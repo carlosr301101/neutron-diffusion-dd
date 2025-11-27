@@ -13,20 +13,31 @@ Este repositorio contiene una implementación en Python de un solver unidimensio
 
 **Lenguaje:** Python 3.13+
 
-**Archivos principales**
+## **Archivos principales**
 - `main.py` : Script de ejemplo para ejecutar simulaciones y generar gráficas comparativas.
 - `core/algoritm.py` : Implementación principal — clases `Config` y `Runner`.
   - `Config`: gestión de entradas (manual o por diccionario), cálculo preliminar de vectores de propiedades por celda.
   - `Runner`: barridos (sweep), cálculo de flujo escalar, chequeo de convergencia y condición reflexiva opcional.
 - `core/cuadraturas.py` : Tabla/constantes de órdenes de cuadratura (S_N) — pesos y cosenos.
-- `test_auto_input.py` : Script de prueba que valida la carga de configuración desde diccionario.
-- `ejemplo_auto_input.py` : Ejemplos de uso y demostración de `Config.auto_input`.
+- `core/input.py` : En este fichero se configura el diccionario con los valores de entrada cuando se activa el modo automatico de entrada
+
+**Modulos de python necesarios para ejecurtar**
+dependencies = [
+    "matplotlib>=3.10.7",
+    "numpy>=2.3.5",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.3",
+]
+
+*Recomiendo el uso de un gestor de paquetes, especificamente `UV`([link](https://docs.astral.sh/uv)) para manejar el entorno virtual y tener organizado el proyecto, en dicho caso se ejecutaria el programa haciendo en consola*
+`uv sync` -> Para cargar los modulos necesarios
+`uv run main.py` -> Ejecutar el programa sin ningun tipo de problema de versiones de python o modulos.
 
 **Ideas/archivos extra**
 - `resultados_comparacion.csv/xlsx` : archivos generados con resultados numéricos y desviaciones.
 - `comparacion_flujos.png` : figura comparativa (analítico vs numérico) generada por `main.py`.
 
-**Conceptos principales del algoritmo**
+## **Conceptos principales del algoritmo**
 
 1. Ecuación de transporte 1D (línea integral):
 
@@ -50,12 +61,12 @@ Este repositorio contiene una implementación en Python de un solver unidimensio
 4. Fuente iterativa (Source Iteration):
    - Se calcula la fuente total usando el φ antiguo, se realiza un sweep (derecha e izquierda), se actualiza φ y se repite hasta convergencia.
 
-**Convenciones y unidades**
+## **Convenciones y unidades**
 - Longitud en centímetros (cm) por defecto.
 - Se asume discretización por regiones; cada región tiene `NC[r]` celdas y espesor `HR[r]`.
 - `IZL` mapea cada región a una zona de material (valores 1-based).
 
-**Uso — modo interactivo**
+## **Uso — modo interactivo**
 
 1) Ejecutar el script principal y seguir los inputs:
 
@@ -103,10 +114,6 @@ phi, n_iter, psi_right, psi_left = runner()
 - `test_auto_input.py`: prueba automatizada que carga un diccionario y ejecuta `Runner`.
 - `ejemplo_auto_input.py`: ejemplos y documentación de uso.
 
-**Sugerencias para validación / debugging**
-- Comparar con solución analítica en dominio homogéneo (implementado en `main.py`).
-- Guardar matrices `PSI_RIGHT/PSI_LEFT` o imprimir primeras celdas para entender el flujo angular.
-- Revisar `IZL` (1-based) y asegurarse que `SCT/SCS/Q` tengan longitudes correctas.
 
 **Problemas comunes y soluciones**
 - IndexError al acceder a zonas: verificar que `IZL` es 1-based y valores ≤ `num_zones`.
@@ -145,21 +152,4 @@ python ejemplo_auto_input.py
   │  └─ cuadraturas.py
 └─ doc/
 ```
-
-**Próximas mejoras recomendadas**
-- Implementar aceleradores de convergencia (p. ej. Chebyshev, Wigner–Seitz)
-- Añadir opciones de salida detallada (HDF5) para post-procesado masivo
-- Comparadores automáticos con soluciones analíticas y tests unitarios
-- Añadir una clase `Mesh` para manejar mallas no uniformes o espacios multifásicos
-
-Si quieres, puedo:
-- añadir tests unitarios automáticos para las funciones clave;
-- exponer una API simple para ejecutar múltiples configuraciones en lote;
-- o generar un notebook de Jupyter que ilustre ejemplos y comparaciones.
-
----
-
-Si quieres que lo guarde con otro nivel de detalle (más fórmulas, más referencias bibliográficas, o un ejemplo de validación analítica paso a paso), dime y lo amplío.
-
----
 
