@@ -1,7 +1,7 @@
 [project]
 name = "curso-modelacion-flujo-n-clasico"
 version = "0.1.0"
-description = "Add your description here"
+description = "This project is oriented to development of Diamond Difference Algoithm to 1D neutron flux problems"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

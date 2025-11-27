@@ -1,42 +1,10 @@
 import core.algoritm as alg
+from core.utils import calcular_desvios_relativos
+from core.inputs import config_dict,config_dict_fino
+
 import matplotlib.pyplot as plt
 import numpy as np
-from math import exp
-import pandas as pd
-
-def func_analitica(x):
-    """Solución analítica de referencia"""
-    return 1.705 * exp(-0.3 * x)
-
-def calcular_desvios_relativos(valores_numericos, valores_analiticos):
-    """Calcula desvíos relativos evitando división por cero"""
-    desvios = np.abs((valores_numericos - valores_analiticos) / (np.abs(valores_analiticos) + 1e-10)) * 100
-    return desvios
-
-config_dict = {
-    'num_regions': 3,
-    'num_zones': 3,
-    'NC': [10,30,10],                  
-    'HR': [10,30,10],                  
-    'IZL': [1,2,3],                     
-    'SCT': [1.0,0.6,1],                   
-    'SCS': [0.99,0.4,0.9],                  
-    'Q': [2,0,0],                     
-    'N': 4                       
-}
-
-
-config_dict_fino = {
-    'num_regions': 3,
-    'num_zones': 3,
-    'NC': [20,60,20],                    
-    'HR': [10,30,10],                  
-    'IZL': [1,2,3],                     
-    'SCT': [1.0,0.6,1],                   
-    'SCS': [0.99,0.4,0.9],                  
-    'Q': [2,0,0],                     
-    'N': 4                    
-}
+import pandas as pd    
 
 def run():
     config = alg.Config(manual=False,reflexiva=True,**config_dict)
@@ -49,13 +17,10 @@ def run():
     
     
     valores_flujo, n_iter,right_flux,left_flux = runner1() # Aqui ocurren los calculos
-    x_fino= np.arange(0,sum(config_fino.HR),0.5)
+    # x_fino= np.arange(0,sum(config_fino.HR),0.5)
     
-    print(right_flux,left_flux)
-    print(len(right_flux),len(left_flux))
     malla = len(valores_flujo)
     h = sum(config.HR) / malla
-    print(malla,config.NTC)
     # Calcular coordenadas de las celdas (centros)
     x_celdas = np.arange(malla) * h + h/2
     # valores_analiticos = np.array([func_analitica(x) for x in x_celdas]) # Flujo analitico para EX1
@@ -83,7 +48,6 @@ def run():
     axes[1].set_ylabel('Desvío relativo (%) logarítmico')
     axes[1].set_title('Desvío Relativo del Flujo Escalar')
     axes[1].grid(True, alpha=0.3, which='both')
-    print(len(x_celdas),len(valores_flujo_fino))
   
     #Comparar los flujos
     
@@ -126,12 +90,13 @@ def run():
     x1=int(10/h)
     x2=int(25/h)
     x3=int(40/h)
-    print(h)
+
     data= pd.read_csv("EX1_data.csv")
     data.loc[len(data)]= [n_iter,malla ,valores_flujo[x1-1], valores_flujo[x2-1], valores_flujo[x3-1], runner1.converged]
     data.to_csv("EX1_data_modificado.csv", index=False)
     
 if __name__ == "__main__":
     run()
+    # Estas lineas convierten la salida de csv a excel
     # data= pd.read_csv("EX1_data.csv")
     # data.to_excel("EX1_data.xlsx", index=False)
