@@ -4,6 +4,7 @@ import logging
 from time import time
 
 
+
 from .cuadraturas import DATA 
 
 logger = logging.getLogger(__name__)

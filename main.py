@@ -1,5 +1,5 @@
 import core.algoritm as alg
-from core.utils import calcular_desvios_relativos
+from core.utils import calcular_desvios_relativos, func_analitica
 from core.inputs import config_dict,config_dict_fino
 
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd    
 
 def run():
-    config = alg.Config(manual=False,reflexiva=True,**config_dict)
+    config = alg.Config(num_regions=1,num_zones=1,manual=True,reflexiva=False)
     runner1 = alg.Runner(config)
     
     config_fino= alg.Config(manual=False, reflexiva=True, **config_dict_fino)
@@ -23,18 +23,18 @@ def run():
     h = sum(config.HR) / malla
     # Calcular coordenadas de las celdas (centros)
     x_celdas = np.arange(malla) * h + h/2
-    # valores_analiticos = np.array([func_analitica(x) for x in x_celdas]) # Flujo analitico para EX1
+    valores_analiticos = np.array([func_analitica(x) for x in x_celdas]) # Flujo analitico para EX1
     
     
     # Calcular desvíos relativos
-    step=2 # Cambiar el step para graficar la misma cantidad de datos de ambas mallas
-    desvios_relativos = calcular_desvios_relativos(valores_flujo, valores_flujo_fino[::step])
+    step=1 # Cambiar el step para graficar la misma cantidad de datos de ambas mallas
+    desvios_relativos = calcular_desvios_relativos(valores_flujo, valores_analiticos)
     
     # Crear figura con 2 subgráficas (lado a lado)
     fig, axes = plt.subplots(1, 2, figsize=(16, 5))
     
     # Gráfica 1: Comparación de valores numéricos vs analíticos
-    # axes[0].plot(x_celdas, valores_analiticos, color='green', linewidth=2, label='Solución analítica')
+    axes[0].plot(x_celdas, valores_analiticos, color='green', linewidth=2, label='Solución analítica')
     axes[0].scatter(x_celdas, valores_flujo, color='blue', s=20, alpha=0.6, label='Solución numérica')
     axes[0].set_xlabel('Posición x (cm)')
     axes[0].set_ylabel('Flujo escalar [n/m^2-s]')
