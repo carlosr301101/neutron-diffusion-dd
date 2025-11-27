@@ -135,6 +135,7 @@ class Config:
         self.SCS = np.array([float(input(f"Sigma_Scattering Zona {i+1}: ")) for i in range(self.num_zones)])
         self.Q = np.array([float(input(f"Fuente (Q) Región {i+1}: ")) for i in range(self.num_regions)]) 
         
+        
         print("\n--- CONFIGURACIÓN CUADRATURA ---")
         self.N = int(input("Orden de cuadratura (ej. 2, 4, 8) -> "))
         if self.N % 2 != 0: 
@@ -142,6 +143,11 @@ class Config:
         self.N_HALF = self.N // 2
         self.weights_directions()
         
+        # Preguntar si es reflexiva
+        reflexiva = input("¿Condiciones reflexivas? (s/n): ").lower() == 's'
+        self.reflexiva = reflexiva
+        
+        # Calculos preliminares
         self.prelim_calculations()
         logger.info(f"Configuración completa.\n{self}")
 
@@ -203,6 +209,12 @@ class Config:
 # Paso B: Runner (Motor de Cálculo)
 # =================================================================
 class Runner():
+    """sumary_line
+        
+        Keyword arguments:
+        argument -- No necesita argumentos, solo usa la config dada al constructor de la clase y ya.
+        Return: Devuelve una tupla con los siguientes valores (self.scalar_flux, self.iteration, self.PSI_RIGHT, self.PSI_LEFT)
+    """
     def __init__(self, config:Config):
         self.config = config
         self.converged = False
@@ -248,9 +260,7 @@ class Runner():
         # self.PSI_LEFT[-1, :] = self.PSI_RIGHT[-1, :]
 
     def sweep(self):
-        """Realiza el barrido de transporte usando Diamond Difference + Step Difference Fixup"""
-        start = time()
-        
+        """Realiza el barrido de transporte usando Diamond Difference """     
         # Pre-calculamos fuente total isotrópica: Q_total = 0.5 * (Q_ext + Sigma_S * Phi)
         # El 0.5 asume simetría/normalización planar standard.
         self.total_source = 0.5 * (self.config.q_ext_vec + self.config.sigma_s_vec * self.scalar_flux)
@@ -273,9 +283,7 @@ class Runner():
                 
                 psi_out = num / den
                 
-                # FIXUP: Step Difference (Si DD da negativo)
                 if psi_out < 0:
-                    # SD asume flujo constante en la celda
                     psi_out = (source + alpha * psi_in) / (alpha + st)
                 
                 self.PSI_RIGHT[k+1, m] = psi_out # Nodo k+1 (salida)
@@ -297,13 +305,11 @@ class Runner():
                 
                 psi_out = num / den
                 
-                # FIXUP
+    
                 if psi_out < 0:
                     psi_out = (source + alpha * psi_in) / (alpha + st)
                 
-                self.PSI_LEFT[k, m] = psi_out # Nodo k (salida hacia la izquierda)
-                
-        logger.info(f"Sweep time: {time()-start:.5f}s")
+                self.PSI_LEFT[k, m] = psi_out
 
     def calculo_flujo(self):
         """Calcula el flujo escalar integrando los flujos angulares"""
@@ -332,10 +338,10 @@ class Runner():
     
     
     def calculo_fugas(self,frontera:int):
-        """Calcula las fugas en las fronteras del sistema
-        -> frontera=0 #Calcula fugas en la frontera Izquierda
-        -> frontera=1 #Calcula fugas en la frontera Derecha
-        -> frontera=2 #Calcula fugas en la frontera Izquierda y Derecha
+        """Calcula las fugas en las fronteras del sistema\n
+        -> frontera=0 #Calcula fugas en la frontera Izquierda\n
+        -> frontera=1 #Calcula fugas en la frontera Derecha\n
+        -> frontera=2 #Calcula fugas en la frontera Izquierda y Derecha\n
         
         -> Otro valor sera tomado como False las condiciones
         
@@ -366,14 +372,15 @@ class Runner():
         rel_error = np.max(diff / denom)
         
         print(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
-        logger.info(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
+        if self.iteration%100==0:
+            logger.info(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
         
         return rel_error < self.config.epsilon
 
-    def __call__(self):
-        logger.info("Iniciando Iteración de Fuente...")
+    def __call__(self):  
+        logger.info("Iniciando Iteracion de Fuente...")
         print("\n--- INICIANDO CÁLCULO ---")
-        
+        start = time()
         while self.iteration < self.config.max_iter:
             self.iteration += 1
             
@@ -395,30 +402,102 @@ class Runner():
                 
         if not self.converged:
             print("\nADVERTENCIA: Máximo de iteraciones alcanzado sin convergencia.")
+        logger.info(f"Tiempo demorado de los calculos: {time()-start}") 
+        
+        # Crear DataFrame con los resultados
+        df_output = self._crear_dataframe_salida()
+        
+        # Guardar automáticamente en Excel
+        self._guardar_excel(df_output)
+        
+        # Retornar diccionario con resultados
+        resultado = {
+            'scalar_flux': self.scalar_flux,
+            'iteration': self.iteration,
+            'PSI_RIGHT': self.PSI_RIGHT,
+            'PSI_LEFT': self.PSI_LEFT,
+            'converged': self.converged,
+            'dataframe': df_output
+        }
+        
+        return resultado
+    
+    def _crear_dataframe_salida(self):
+        """Crea un DataFrame con los resultados del cálculo"""
+        # Crear índices de celdas
+        cell_indices = np.arange(self.config.NTC)
+        
+        # Crear diccionario con datos
+        data = {
+            'celda_idx': cell_indices,
+            'flujo_escalar': self.scalar_flux.copy()
+        }
+        
+        
+        # Crear DataFrame
+        df = pd.DataFrame(data)
+        
+        return df
+    
+    def _guardar_excel(self, df, filename='resultados_runner.xlsx'):
+        """Guarda el DataFrame en un archivo Excel con información adicional"""
+        try:
+            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+                # Hoja 1: Resultados principales
+                df.to_excel(writer, sheet_name='Flujo_Escalar', index=False)
+                
+                # Hoja 2: Información de convergencia
+                info_convergencia = pd.DataFrame({
+                    'Parámetro': ['Iteraciones', 'Convergido', 'Epsilon', 'Max Iter', 'Celdas Totales', 'Nodos Totales', 'Cuadratura'],
+                    'Valor': [
+                        self.iteration,
+                        self.converged,
+                        self.config.epsilon,
+                        self.config.max_iter,
+                        self.config.NTC,
+                        self.config.NTP,
+                        f"S{self.config.N}"
+                    ]
+                })
+                info_convergencia.to_excel(writer, sheet_name='Info_Convergencia', index=False)
+                
+                # Hoja 3: Propiedades de materiales
+                propiedades = pd.DataFrame({
+                    'Zona': np.arange(1, self.config.num_zones + 1),
+                    'Sigma_Total': self.config.SCT,
+                    'Sigma_Scattering': self.config.SCS,
+                    'Fuentes': self.config.Q
+                })
+                propiedades.to_excel(writer, sheet_name='Propiedades_Material', index=False)
+                
+            print(f"✓ Resultados guardados en: {filename}")
+            logger.info(f"Resultados guardados en: {filename}")
             
-        return (self.scalar_flux, self.iteration, self.PSI_RIGHT, self.PSI_LEFT)
+        except Exception as e:
+            print(f"✗ Error al guardar Excel: {e}")
+            logger.error(f"Error al guardar Excel: {e}")
 
-# =================================================================
-# BLOQUE MAIN PARA EJECUCIÓN
-# =================================================================
-if __name__ == "__main__":
-    # Ejemplo de uso
-    try:
-        conf = Config(num_regions=1, num_zones=1)
-        # Usamos inputs manuales como en tu código original
-        conf.manual_input()
+# # =================================================================
+# # BLOQUE MAIN PARA EJECUCIÓN
+# # =================================================================
+# if __name__ == "__main__":
+#     # Ejemplo de uso
+#     try:
+#         conf = Config(num_regions=1, num_zones=1)
+#         # Usamos inputs manuales como en tu código original
+#         conf.manual_input()
         
-        # Preguntar si es reflexiva
-        ref = input("¿Condiciones reflexivas? (s/n): ").lower() == 's'
+#         # Preguntar si es reflexiva
+#         ref = input("¿Condiciones reflexivas? (s/n): ").lower() == 's'
         
-        runner = Runner(conf)
-        flux_result = runner()
+#         runner = Runner(conf)
+#         flux_result = runner()
         
-        print("\n--- RESULTADO FINAL (FLUJO ESCALAR) ---")
-        print(flux_result)
+#         print("\n--- RESULTADO FINAL (FLUJO ESCALAR) ---")
+#         print(flux_result)
         
-    except ValueError as e:
-        print(f"Error de entrada: {e}")
-    except Exception as e:
-        print(f"Error inesperado: {e}")
-        logger.error(e, exc_info=True)
+#     except ValueError as e:
+#         print(f"Error de entrada: {e}")
+#     except Exception as e:
+#         print(f"Error inesperado: {e}")
+#         logger.error(e, exc_info=True)

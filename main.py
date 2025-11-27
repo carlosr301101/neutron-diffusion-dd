@@ -6,17 +6,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd    
 
-def run():
+def code_to_plot():
     config = alg.Config(num_regions=1,num_zones=1,manual=True,reflexiva=False)
     runner1 = alg.Runner(config)
     
     config_fino= alg.Config(manual=False, reflexiva=True, **config_dict_fino)
     runner_fino= alg.Runner(config_fino)
     
-    valores_flujo_fino, n_iter_fino,right_flux_fino,left_flux_fino = runner_fino() # Aqui ocurren los calculos
+    resultado_fino = runner_fino() # Retorna diccionario
+    valores_flujo_fino = resultado_fino['scalar_flux']
     
+    resultado = runner1() # Retorna diccionario
+    valores_flujo = resultado['scalar_flux']
+    n_iter = resultado['iteration']
     
-    valores_flujo, n_iter,right_flux,left_flux = runner1() # Aqui ocurren los calculos
     # x_fino= np.arange(0,sum(config_fino.HR),0.5)
     
     malla = len(valores_flujo)
@@ -85,18 +88,39 @@ def run():
         'desvio_relativo_%': desvios_relativos
     })
     resultados.to_excel("resultados_comparacion.xlsx", index=False)
-    print("✓ Resultados guarto_dados como: resultados_comparacion.csv")
+    print("✓ Resultados guardados como: resultados_comparacion.xlsx")
     
     x1=int(10/h)
     x2=int(25/h)
     x3=int(40/h)
 
     data= pd.read_csv("EX1_data.csv")
-    data.loc[len(data)]= [n_iter,malla ,valores_flujo[x1-1], valores_flujo[x2-1], valores_flujo[x3-1], runner1.converged]
+    data.loc[len(data)]= [n_iter,malla ,valores_flujo[x1-1], valores_flujo[x2-1], valores_flujo[x3-1], resultado['converged']]
     data.to_csv("EX1_data_modificado.csv", index=False)
     
+    
+def run():
+    config = alg.Config(manual=True,reflexiva=False)
+    runner = alg.Runner(config)
+    resultado = runner() # Retorna diccionario
+    valores_flujo = resultado['scalar_flux']
+
+    malla = len(valores_flujo)
+    h = sum(config.HR) / malla
+    # Calcular coordenadas de las celdas (centros)
+    x_celdas = np.arange(malla) * h + h/2
+    
+    # Graficar
+    plt.plot(x_celdas, valores_flujo, color='blue', label='Solución numérica')
+    plt.xlabel('Posición x (cm)')
+    plt.ylabel('Flujo escalar [n/m^2-s]')
+    plt.savefig("Flujo.png", dpi=150)
+    print("✓ Gráfica guardada como: Flujo.png")
+    plt.show()
+    
 if __name__ == "__main__":
-    run()
+    # code_to_plot()
     # Estas lineas convierten la salida de csv a excel
     # data= pd.read_csv("EX1_data.csv")
     # data.to_excel("EX1_data.xlsx", index=False)
+    run()
