@@ -329,6 +329,28 @@ class Runner():
             self.scalar_flux[k] = suma
             
         return old_flux
+    
+    
+    def calculo_fugas(self,frontera:int):
+        """Calcula las fugas en las fronteras del sistema"""
+        fuga_izquierda = 0.0
+        fuga_derecha = 0.0
+        
+        # Fuga en la frontera izquierda (x=0)
+        if frontera !=0:
+            for m in range(self.config.N_HALF):
+                mu = self.config.miu_m[m]
+                w = self.config.omega_m[m]
+                fuga_izquierda += w * self.PSI_LEFT[0, m] * abs(mu)
+        
+        # Fuga en la frontera derecha (x=L)
+        if frontera ==0:
+        for m in range(self.config.N_HALF):
+            mu = self.config.miu_m[m]
+            w = self.config.omega_m[m]
+            fuga_derecha += w * self.PSI_RIGHT[-1, m] * abs(mu)
+        
+        return fuga_izquierda, fuga_derecha
 
     def check_convergence(self, old_flux):
         # Manejo seguro de división por cero
