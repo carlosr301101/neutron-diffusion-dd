@@ -332,7 +332,14 @@ class Runner():
     
     
     def calculo_fugas(self,frontera:int):
-        """Calcula las fugas en las fronteras del sistema"""
+        """Calcula las fugas en las fronteras del sistema
+        -> frontera=0 #Calcula fugas en la frontera Izquierda
+        -> frontera=1 #Calcula fugas en la frontera Derecha
+        -> frontera=2 #Calcula fugas en la frontera Izquierda y Derecha
+        
+        -> Otro valor sera tomado como False las condiciones
+        
+        """
         fuga_izquierda = 0.0
         fuga_derecha = 0.0
         
