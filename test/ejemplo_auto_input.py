@@ -19,7 +19,11 @@ El diccionario debe contener las siguientes claves:
         'SCT': list o np.array,                      # Sigma total por zona
         'SCS': list o np.array,                      # Sigma scattering por zona
         'Q': list o np.array,                        # Fuente por región
-        'N': int                                      # Orden de cuadratura (debe ser par)
+        'N': int                                     # Orden de cuadratura (debe ser par)
+        'reflex_izq': True,                          # Dice si es reflexivo izq   
+        'reflex_der': False,                         # Dice si es reflexivo izq
+        'bound_left': [0,0],                         # Valores de la fuente por la izq   
+        'bound_right': [0,0]                         # Valores de la fuente por la der
     }
 
 Ejemplo 1: Configuración simple (1 región, 1 zona)

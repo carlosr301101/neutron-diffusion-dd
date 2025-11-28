@@ -4,7 +4,6 @@ import logging
 from time import time
 
 
-
 from .cuadraturas import DATA 
 
 logger = logging.getLogger(__name__)
@@ -13,14 +12,15 @@ logger = logging.getLogger(__name__)
 # Paso A: Configuración
 # =================================================================
 class Config:
-    def __init__(self, num_regions:int=0, num_zones:int=0, epsilon:float=1e-5, max_iter:int=2000, manual:bool=True ,reflexiva:bool=False,**kwargs):
+    def __init__(self, epsilon:float=1e-5, max_iter:int=2000, manual:bool=True,**kwargs):
         # Limpiamos handlers previos para evitar duplicidad en logs
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
         logging.basicConfig(filename='Config.log', level=logging.INFO, filemode='w')
-        self.num_regions = num_regions
-        self.num_zones = num_zones
-        self.reflexiva = reflexiva
+        self.num_regions = 0
+        self.num_zones = 0
+        self.bound_left= None
+        self.bound_right= None
         
         if manual:
             if self.num_regions==0:
@@ -60,6 +60,9 @@ class Config:
             'SCS': list o np.array (sigma scattering por zona),
             'Q': list o np.array (fuente por región),
             'N': int (orden cuadratura)
+            'reflex_izq': bool (decide si es reflexiva o no)
+            'reflex_derecha': bool (decide si es reflexiva o no)
+        
         }
         """
         print("\n--- CARGANDO CONFIGURACIÓN DESDE DICCIONARIO ---")
@@ -90,6 +93,13 @@ class Config:
         self.SCS = np.array(kwargs['SCS'], dtype=float)
         self.Q = np.array(kwargs['Q'], dtype=float)
         
+        self.bound_left = np.array(kwargs.get('bound_left',[]), dtype=float) 
+        self.bound_right = np.array(kwargs.get('bound_right',[]), dtype=float)
+        
+        self.reflex_izq = kwargs.get('reflex_izq', False)
+        self.reflex_der = kwargs.get('reflex_der', False)
+        
+        
         # Configurar cuadratura
         self.N = int(kwargs['N'])
         if self.N % 2 != 0:
@@ -112,6 +122,13 @@ class Config:
             raise ValueError(f"SCS debe tener {self.num_zones} elementos")
         if len(self.Q) != self.num_regions:
             raise ValueError(f"Q debe tener {self.num_regions} elementos")
+        
+        if not self.reflex_izq:
+            if len(self.bound_left) != self.N_HALF:
+                raise ValueError(f"bound_left debe tener {self.N_HALF} elementos")
+        if self.bound_right is not None:
+            if len(self.bound_right) != self.N_HALF:
+                raise ValueError(f"bound_right debe tener {self.N_HALF} elementos")
         
         # Validar que IZL hace referencia a zonas válidas (1-based)
         if np.any(self.IZL < 1) or np.any(self.IZL > self.num_zones):
@@ -144,8 +161,10 @@ class Config:
         self.weights_directions()
         
         # Preguntar si es reflexiva
-        reflexiva = input("¿Condiciones reflexivas? (s/n): ").lower() == 's'
-        self.reflexiva = reflexiva
+        reflex_izq = input("¿Condiciones reflexivas por la Izquierda? (s/n): ").lower() == 's'
+        self.reflex_izq = reflex_izq
+        reflex_der = input("¿Condiciones reflexivas por la Derecha? (s/n): ").lower() == 's'
+        self.reflex_der = reflex_der
         
         # Calculos preliminares
         self.prelim_calculations()
@@ -218,7 +237,9 @@ class Runner():
     def __init__(self, config:Config):
         self.config = config
         self.converged = False
-        self.reflexiva = config.reflexiva
+        self.reflex_izq = config.reflex_izq
+        self.reflex_der = config.reflex_der
+        
         self.iteration = 0
         
         # Flujos Angulares [Nodos x Direcciones]
@@ -233,31 +254,68 @@ class Runner():
         # Fuente Total [Celdas] (Scattering + Externa)
         self.total_source = np.zeros(config.NTC)
 
-        if not self.reflexiva:
-            self.boundary_conditions()
+        
+        if self.reflex_der or self.reflex_izq:
+            if not self.reflex_der:
+                self.boundary_conditions_right()    
+                self.PSI_LEFT[-1, :] = 1.0
+                   
+            if not self.reflex_izq:
+                self.boundary_conditions_left()
+                self.PSI_RIGHT[0, :] = 1.0 
         else:
             # Inicializamos en 1 solo para evitar ceros, se ajustará en el loop
             self.PSI_RIGHT[0, :] = 1.0 
             self.PSI_LEFT[-1, :] = 1.0
 
-    def boundary_conditions(self):
+        if not self.reflex_der and not self.reflex_izq:
+            self.boundary_conditions_left()
+            self.boundary_conditions_right()        
+        
+    def boundary_conditions_left(self):
         print("\n--- CONDICIONES DE FRONTERA ---")
         # Frontera Izquierda (x=0) incidiendo hacia la derecha
-        print("Ingrese flujo incidente en IZQUIERDA (mu > 0):")
-        vals_izq = [float(input(f"  Dirección {i+1}: ")) for i in range(self.config.N_HALF)]
-        self.PSI_RIGHT[0, :] = vals_izq
+       
         
-        # Frontera Derecha (x=L) incidiendo hacia la izquierda
-        print("Ingrese flujo incidente en DERECHA (mu < 0):")
-        vals_der = [float(input(f"  Dirección {i+1}: ")) for i in range(self.config.N_HALF)]
-        self.PSI_LEFT[-1, :] = vals_der
+        if self.config.bound_left is not None:
+            print("Usando condiciones de frontera izquierda desde configuración.")
+            vals_izq = self.config.bound_left
+            logger.info(f"Usando condiciones de frontera izquierda desde configuración: {vals_izq}")
+            self.PSI_RIGHT[0, :] = vals_izq
+        else:
+            print("Ingrese flujo incidente en IZQUIERDA (mu > 0):")
+            vals_izq = [float(input(f"  Dirección {i+1}: ")) for i in range(self.config.N_HALF)]
+            self.PSI_RIGHT[0, :] = vals_izq
 
-    def update_reflective_boundaries(self):
+
+    def boundary_conditions_right(self):
+        print("\n--- CONDICIONES DE FRONTERA ---")        
+        # Frontera Derecha (x=L) incidiendo hacia la izquierda
+        
+        if self.config.bound_right is not None:
+            print("Usando condiciones de frontera Derecha desde configuración.")
+            vals_der = self.config.bound_right
+            logger.info(f"Usando condiciones de frontera Derecha desde configuración: {vals_der}")
+            self.PSI_LEFT[-1, :] = vals_der
+        else:
+            print("Ingrese flujo incidente en DERECHA (mu < 0):")
+            vals_der = [float(input(f"  Dirección {i+1}: ")) for i in range(self.config.N_HALF)]
+            self.PSI_LEFT[-1, :] = vals_der
+
+
+    def update_reflective_boundaries_left(self):
         """Espejo: Lo que sale por un lado entra por el mismo lado en dirección opuesta"""
         # Izquierda (x=0): Lo que venía de la izquierda (PSI_LEFT) rebota hacia la derecha
         self.PSI_RIGHT[0, :] = self.PSI_LEFT[0, :]
         # Derecha (x=L): Lo que venía de la derecha (PSI_RIGHT) rebota hacia la izquierda
         # self.PSI_LEFT[-1, :] = self.PSI_RIGHT[-1, :]
+
+    def update_reflective_boundaries_right(self):
+        """Espejo: Lo que sale por un lado entra por el mismo lado en dirección opuesta"""
+        # Izquierda (x=0): Lo que venía de la izquierda (PSI_LEFT) rebota hacia la derecha
+        # self.PSI_RIGHT[0, :] = self.PSI_LEFT[0, :]
+        # Derecha (x=L): Lo que venía de la derecha (PSI_RIGHT) rebota hacia la izquierda
+        self.PSI_LEFT[-1, :] = self.PSI_RIGHT[-1, :]
 
     def sweep(self):
         """Realiza el barrido de transporte usando Diamond Difference """     
@@ -371,8 +429,8 @@ class Runner():
         diff = np.abs(self.scalar_flux - old_flux)
         rel_error = np.max(diff / denom)
         
-        print(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
         if self.iteration%100==0:
+            print(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
             logger.info(f"Iter {self.iteration}: Error Max = {rel_error:.2e}")
         
         return rel_error < self.config.epsilon
@@ -385,8 +443,10 @@ class Runner():
             self.iteration += 1
             
             # 1. Actualizar fronteras si es reflexiva
-            if self.reflexiva:
-                self.update_reflective_boundaries()
+            if self.config.reflex_der:
+                self.update_reflective_boundaries_right()
+            if self.config.reflex_izq:
+                self.update_reflective_boundaries_left()
             
             # 2. Barrido (Transport Sweep)
             self.sweep()
@@ -451,7 +511,7 @@ class Runner():
                     'Parámetro': ['Iteraciones', 'Convergido', 'Epsilon', 'Max Iter', 'Celdas Totales', 'Nodos Totales', 'Cuadratura'],
                     'Valor': [
                         self.iteration,
-                        self.converged,
+                        'converge' if self.converged else 'no converge',
                         self.config.epsilon,
                         self.config.max_iter,
                         self.config.NTC,
@@ -461,15 +521,31 @@ class Runner():
                 })
                 info_convergencia.to_excel(writer, sheet_name='Info_Convergencia', index=False)
                 
+                
                 # Hoja 3: Propiedades de materiales
                 propiedades = pd.DataFrame({
                     'Zona': np.arange(1, self.config.num_zones + 1),
                     'Sigma_Total': self.config.SCT,
                     'Sigma_Scattering': self.config.SCS,
-                    'Fuentes': self.config.Q
                 })
                 propiedades.to_excel(writer, sheet_name='Propiedades_Material', index=False)
                 
+                regiones_df = pd.DataFrame({
+                    'Region': np.arange(1, self.config.num_regions + 1),
+                    'NC (celdas por region)': list(self.config.NC),
+                    'HR (espesor [cm])': list(self.config.HR),
+                    'IZL (zona, 1-based)': list(self.config.IZL),
+                    'Q (fuente por region)': list(self.config.Q)
+                })
+                regiones_df.to_excel(writer, sheet_name='Regiones_Distribucion', index=False)
+                
+                
+                resumen = pd.DataFrame({
+                    'Parámetro': ['Numero_Regiones', 'Numero_Zonas', 'Total_Celdas', 'Total_Nodos', 'Orden_Cuadratura'],
+                    'Valor': [self.config.num_regions, self.config.num_zones, self.config.NTC, self.config.NTP, f"S{self.config.N}"]
+                })
+                resumen.to_excel(writer, sheet_name='Resumen', index=False)
+
             print(f"✓ Resultados guardados en: {filename}")
             logger.info(f"Resultados guardados en: {filename}")
             
