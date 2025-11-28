@@ -4,7 +4,7 @@
 
 ## 📝 Descripción del Proyecto
 
-Este repositorio contiene una implementación en Python de un solver unidimensional de transporte neutral de partículas usando la metodología Diamond Difference (DD) con iteración de fuente. Está pensado para estudios numéricos, validación contra soluciones analíticas y experimentos de sensibilidad.
+Este repositorio contiene una implementación en Python de un solver unidimensional de transporte de partículas neutras usando la metodología Diamond Difference (DD) con iteración de fuente. Está pensado para estudios numéricos, validación contra soluciones analíticas y experimentos de sensibilidad.
 
 **Resumen rápido**
 - Implementa cuadratura S_N (p. ej. S2) y barridos angulares para resolver la ecuación de transporte unidimensional.
@@ -33,9 +33,9 @@ dependencies = [
 `uv sync` -> Para cargar los modulos necesarios
 `uv run main.py` -> Ejecutar el programa sin ningun tipo de problema de versiones de python o modulos.
 
-**Ideas/archivos extra**
-- `resultados_comparacion.csv/xlsx` : archivos generados con resultados numéricos y desviaciones.
-- `comparacion_flujos.png` : figura comparativa (analítico vs numérico) generada por `main.py`.
+**Archivos extras generados**
+- `resultados_runner.csv/xlsx` : archivos generados con resultados numéricos y desviaciones.
+- `Flujo.png` : figura comparativa (analítico vs numérico) generada por `main.py`.
 
 ## **Conceptos principales del algoritmo**
 
@@ -77,7 +77,7 @@ El programa pedirá:
 - `NC`, `HR`, `IZL`, propiedades de material (`SCT`, `SCS`, `Q`),
 - orden de cuadratura `N` (p. ej. 2) y condiciones de frontera (valores incidentes).
 
-Al finalizar crea la figura `comparacion_flujos.png` y el fichero `resultados_comparacion.xlsx`.
+Al finalizar crea la figura `Flujo.png` y el fichero `resultados_runner.xlsx`.
 
 **Uso — modo automático (desde diccionario)**
 
@@ -96,11 +96,24 @@ cfg = {
   'SCS': [0.97],
   'Q': [1.0],
   'N': 2
+  'reflex_izq': True,                          # Dice si es reflexivo izq   
+  'reflex_der': False,                         # Dice si es reflexivo izq
+  'bound_left': [1],                         # Valores de la fuente por la izq   
+  'bound_right': [0]                         # Valores de la fuente por la der
 }
 
-config = Config(manual=False, reflexiva=True, **cfg)
+config = Config(manual=False, **cfg)
 runner = Runner(config)
-phi, n_iter, psi_right, psi_left = runner()
+resultado = runner()
+ # Retornar diccionario con resultados
+        resultado = {
+            'scalar_flux': self.scalar_flux,
+            'iteration': self.iteration,
+            'PSI_RIGHT': self.PSI_RIGHT,
+            'PSI_LEFT': self.PSI_LEFT,
+            'converged': self.converged,
+            'dataframe': df_output
+        }
 ```
 
 `Config.auto_input` valida dimensiones y tipos, construye vectores por celda (`sigma_t_vec`, `dx_vec`, etc.) y llama a `prelim_calculations()`.

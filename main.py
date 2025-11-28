@@ -104,6 +104,7 @@ def run():
     runner = alg.Runner(config)
     resultado = runner() # Retorna diccionario
     valores_flujo = resultado['scalar_flux']
+    print(f"Resultados de la simulación:\n{resultado['dataframe']}")
 
     malla = len(valores_flujo)
     h = sum(config.HR) / malla
