@@ -20,9 +20,9 @@ El diccionario debe contener las siguientes claves:
         'SCS': list o np.array,                      # Sigma scattering por zona
         'Q': list o np.array,                        # Fuente por región
         'N': int                                     # Orden de cuadratura (debe ser par)
-        'reflex_izq': True,                          # Dice si es reflexivo izq   
+        'reflex_izq': True,                          # Dice si es reflexivo izq
         'reflex_der': False,                         # Dice si es reflexivo izq
-        'bound_left': [0,0],                         # Valores de la fuente por la izq   
+        'bound_left': [0,0],                         # Valores de la fuente por la izq
         'bound_right': [0,0]                         # Valores de la fuente por la der
     }
 
@@ -34,15 +34,15 @@ import core.algoritm as alg
 
 # Diccionario de configuración
 config_simple = {
-    'num_regions': 1,
-    'num_zones': 1,
-    'NC': [100],                    # 100 celdas
-    'HR': [100.0],                  # Espesor total: 100 cm
-    'IZL': [1],                     # La región 1 usa la zona 1
-    'SCT': [1.0],                   # Sigma total = 1.0 cm^-1
-    'SCS': [0.97],                  # Sigma scattering = 0.97 cm^-1
-    'Q': [1.0],                     # Fuente = 1.0
-    'N': 2                          # S2 cuadratura
+    "num_regions": 1,
+    "num_zones": 1,
+    "NC": [100],  # 100 celdas
+    "HR": [100.0],  # Espesor total: 100 cm
+    "IZL": [1],  # La región 1 usa la zona 1
+    "SCT": [1.0],  # Sigma total = 1.0 cm^-1
+    "SCS": [0.97],  # Sigma scattering = 0.97 cm^-1
+    "Q": [1.0],  # Fuente = 1.0
+    "N": 2,  # S2 cuadratura
 }
 
 # Crear Config sin inputs manuales
@@ -56,15 +56,15 @@ print(f"  Cuadratura: S{config.N}")
 # Ejemplo 2: Configuración con múltiples regiones y zonas
 # ======================================================
 config_multi = {
-    'num_regions': 2,
-    'num_zones': 2,
-    'NC': [50, 50],                 # 50 celdas en cada región
-    'HR': [50.0, 50.0],             # 50 cm de espesor cada una
-    'IZL': [1, 2],                  # Región 1 → Zona 1, Región 2 → Zona 2
-    'SCT': [1.0, 2.0],              # Sigma totales diferentes
-    'SCS': [0.97, 0.98],            # Sigma scattering diferentes
-    'Q': [1.0, 0.5],                # Fuentes diferentes
-    'N': 2
+    "num_regions": 2,
+    "num_zones": 2,
+    "NC": [50, 50],  # 50 celdas en cada región
+    "HR": [50.0, 50.0],  # 50 cm de espesor cada una
+    "IZL": [1, 2],  # Región 1 → Zona 1, Región 2 → Zona 2
+    "SCT": [1.0, 2.0],  # Sigma totales diferentes
+    "SCS": [0.97, 0.98],  # Sigma scattering diferentes
+    "Q": [1.0, 0.5],  # Fuentes diferentes
+    "N": 2,
 }
 
 # Crear Config multi-región
