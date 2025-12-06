@@ -41,7 +41,7 @@ dependencies = [
 
 1. Ecuación de transporte 1D (línea integral):
 
-   μ dψ/dx + Σ_t ψ = 1/2 Σ_s φ + Q
+ $$  μ dψ/dx + Σ_t ψ = 1/2 Σ_s φ + Q $$
 
    - ψ(x, μ): flujo angular
    - φ(x) = ∑_m w_m ψ_m(x): flujo escalar
