@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import logging
 from time import time
+from datetime import datetime
 
 
 from .cuadraturas import DATA
@@ -535,7 +536,7 @@ class Runner:
 
         return df
 
-    def _guardar_excel(self, df, filename="resultados_runner.xlsx"):
+    def _guardar_excel(self, df, filename=f"resultados_runner_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.xlsx"):
         """Guarda el DataFrame en un archivo Excel con información adicional"""
         try:
             with pd.ExcelWriter(filename, engine="openpyxl") as writer:
