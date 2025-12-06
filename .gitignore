@@ -1,4 +1,4 @@
-```
+
 # Compiled and build artifacts
 *.pyc
 __pycache__/
@@ -53,4 +53,9 @@ wheels/
 # Testing
 .pytest_cache/
 .mypy_cache/
-```
+
+## EXTRAs
+.extras/
+doc/
+*.xlsx
+*.png
