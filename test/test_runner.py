@@ -45,7 +45,9 @@ def test_runner_with_reflective_boundaries():
         "Q": [1.0],
         "N": 2,
         "reflex_izq": True,
-        "reflex_der": False
+        "reflex_der": False,
+        "bound_left": [0.0],  # Boundary conditions still needed even for reflective
+        "bound_right": [0.0]
     }
     
     config = Config(manual=False, **config_dict)
@@ -175,7 +177,9 @@ def test_update_reflective_boundaries():
         "Q": [1.0],
         "N": 2,
         "reflex_izq": True,
-        "reflex_der": True
+        "reflex_der": True,
+        "bound_left": [0.0],  # Boundary conditions still needed even for reflective
+        "bound_right": [0.0]
     }
     
     config = Config(manual=False, **config_dict)
@@ -211,6 +215,8 @@ def test_runner_call_basic():
         "N": 2,
         "epsilon": 1e-3,  # Larger epsilon for faster convergence
         "max_iter": 10,
+        "bound_left": [0.0],  # Boundary conditions needed
+        "bound_right": [0.0]
     }
     
     config = Config(manual=False, **config_dict)
@@ -248,6 +254,8 @@ def test_calculo_fugas():
         "SCS": [0.0],
         "Q": [0.0],
         "N": 2,
+        "bound_left": [0.0],  # Boundary conditions needed
+        "bound_right": [0.0]
     }
     
     config = Config(manual=False, **config_dict)
