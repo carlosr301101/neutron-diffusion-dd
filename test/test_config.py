@@ -266,5 +266,5 @@ def test_config_reflective_boundaries():
     
     config = Config(manual=False, **config_dict)
     
-    assert config.reflex_izq == True
-    assert config.reflex_der == True
+    assert config.reflex_izq
+    assert config.reflex_der

@@ -97,8 +97,8 @@ class Config:
         self.SCS = np.array(kwargs["SCS"], dtype=float)
         self.Q = np.array(kwargs["Q"], dtype=float)
 
-        self.bound_left = np.array(kwargs.get("bound_left", []), dtype=float)
-        self.bound_right = np.array(kwargs.get("bound_right", []), dtype=float)
+        self.bound_left = np.array(kwargs.get("bound_left", [0]), dtype=float)
+        self.bound_right = np.array(kwargs.get("bound_right", [0]), dtype=float)
 
         self.reflex_izq = kwargs.get("reflex_izq", False)
         self.reflex_der = kwargs.get("reflex_der", False)
@@ -129,7 +129,7 @@ class Config:
         if not self.reflex_izq:
             if len(self.bound_left) != self.N_HALF:
                 raise ValueError(f"bound_left debe tener {self.N_HALF} elementos")
-        if self.bound_right is not None:
+        if not self.bound_right:
             if len(self.bound_right) != self.N_HALF:
                 raise ValueError(f"bound_right debe tener {self.N_HALF} elementos")
 
