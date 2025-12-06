@@ -261,7 +261,9 @@ def test_config_reflective_boundaries():
         "Q": [1.0],
         "N": 2,
         "reflex_izq": True,
-        "reflex_der": True
+        "reflex_der": True,
+        "bound_left": [0.0],  # Still need to provide bounds even for reflective
+        "bound_right": [0.0]
     }
     
     config = Config(manual=False, **config_dict)
