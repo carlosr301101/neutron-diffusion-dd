@@ -1,6 +1,6 @@
-# Contributing to [Project Name]
+# Contributing to neutron-diffusion-dd
 
-Thank you for your interest in contributing to [Project Name]! We welcome contributions from the community and appreciate your efforts to improve this project.
+Thank you for your interest in contributing to neutron-diffusion-dd! We welcome contributions from the community and appreciate your efforts to improve this project.
 
 ## How To Contribute
 
@@ -22,9 +22,9 @@ We're excited to work with you! Here are the ways you can contribute:
 ### Development Setup
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/[Project Name].git`
-3. Create a virtual environment (recommended)
-4. Install dependencies: `pip install -r requirements.txt`
+2. Clone your fork: `git clone https://github.com/carlosr301101/neutron-diffusion-dd.git`
+3. Install [UV](https://docs.astral.sh/uv)
+4. Install dependencies: `uv sync`
 5. Make your changes
 6. Test your changes thoroughly
 7. Submit a pull request
@@ -33,7 +33,6 @@ We're excited to work with you! Here are the ways you can contribute:
 
 We value all contributions to this project. Contributors will be acknowledged in the following ways:
 
-- Contributors will be listed in the README file (if applicable)
 - Pull requests will be reviewed promptly and constructively
 - Significant contributions may be highlighted in release notes
 - Your GitHub profile will be linked as a contributor in the project history
@@ -56,8 +55,8 @@ We appreciate all types of contributions, including:
 ### Clone Your Fork
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/[Project Name].git
-cd [Project Name]
+git clone https://github.com/carlosr301101/neutron-diffusion-dd.git
+cd neutron-diffusion-dd
 ```
 
 ### Create a Branch
@@ -129,26 +128,6 @@ git push origin feature/your-feature-name
 5. Fill out the pull request template
 6. Submit for review
 
-## Code Quality and Formatting
-
-### Using Ruff for Formatting
-
-This project uses Ruff, a fast Python linter and formatter. To ensure your code meets the project's formatting standards:
-
-1. **Install and run the formatter**:
-   ```bash
-   uvx ruff format .
-   ```
-
-2. **Check for linting issues**:
-   ```bash
-   uvx ruff check .
-   ```
-
-3. **Auto-fix issues**:
-   ```bash
-   uvx ruff check --fix .
-   ```
 
 Ruff helps maintain consistent code style and catches common issues. Please ensure your code passes all checks before submitting a pull request.
 
