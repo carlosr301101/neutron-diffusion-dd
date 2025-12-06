@@ -129,7 +129,7 @@ class Config:
         if not self.reflex_izq:
             if len(self.bound_left) != self.N_HALF:
                 raise ValueError(f"bound_left debe tener {self.N_HALF} elementos")
-        if not self.bound_right:
+        if not self.reflex_der:
             if len(self.bound_right) != self.N_HALF:
                 raise ValueError(f"bound_right debe tener {self.N_HALF} elementos")
 
@@ -536,7 +536,11 @@ class Runner:
 
         return df
 
-    def _guardar_excel(self, df, filename=f"resultados_runner_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.xlsx"):
+    def _guardar_excel(
+        self,
+        df,
+        filename=f"resultados_runner_{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.xlsx",
+    ):
         """Guarda el DataFrame en un archivo Excel con información adicional"""
         try:
             with pd.ExcelWriter(filename, engine="openpyxl") as writer:
